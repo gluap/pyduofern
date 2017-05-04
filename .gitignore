@@ -1,0 +1,10 @@
+*.pm
+*.pyc
+**/coverage/*
+*.pm
+build/**
+coverage/**
+dist/**
+*.egg-info/**
+.coverage
+.idea/**
