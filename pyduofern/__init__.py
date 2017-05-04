@@ -1,1 +1,1 @@
-from .duofern_stick import DuofernStick
+from pyduofern.duofern_stick import DuofernStick

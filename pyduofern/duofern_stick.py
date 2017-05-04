@@ -15,7 +15,7 @@ import serial
 import serial.tools.list_ports
 
 from .duofern import Duofern
-from .exceptions import DuofernTimeoutException
+from .exceptions import DuofernTimeoutException, DuofernException
 
 logger = logging.getLogger(__file__)
 
@@ -47,29 +47,16 @@ def refresh_serial_connection(function):
 
 
 class DuofernStick(threading.Thread):
-    def __init__(self, device=None, dongle_serial=None, config_file_json=None, duofern_parser=None):
+    def __init__(self, device=None, system_code=None, config_file_json=None, duofern_parser=None):
+        """
+        
+        :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
+        :param system_code: system code
+        :param config_file_json: path to config file. use the same one to conveniently update info about your system
+        :param duofern_parser: parser object. Unless you hacked your own one just leave None and it
+         defaults to pyduofern.duofern.Duofern()
+        """
         threading.Thread.__init__(self)
-
-        if duofern_parser is None:
-            self.duofern_parser = Duofern(send_hook=self.add_serial_and_send)
-
-        self.running = False
-        self.pairing = False
-        self.unpairing = False
-
-        if device is None:
-            self.port = serial.tools.list_ports.comports()[0].device
-            logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
-        else:
-            self.port = device
-
-        if dongle_serial is None:
-            self.serial = "6FABCD"
-            logger.debug("no device ID set, defaulting to {}".format(self.serial))
-        else:
-            self.serial = dongle_serial
-
-        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
 
         if config_file_json is None:
             config_file_json = "duofern.json"
@@ -79,18 +66,57 @@ class DuofernStick(threading.Thread):
                 with open(config_file_json, "r") as config_file_fh:
                     self.config = json.load(config_file_fh)
             except json.decoder.JSONDecodeError:
-                self.config = {}
+                self.config = {'devices': []}
                 logger.info('failed reading config')
         else:
             logger.info('config is not file')
-            self.config = {}
-            with open(config_file_json, "w") as config_fh:
-                json.dump(self.config, config_fh, indent=4)
+            self.config = {'devices': []}
+
+        if duofern_parser is None:
+            self.duofern_parser = Duofern(send_hook=self.add_serial_and_send)
+
+        self.running = False
+        self.pairing = False
+        self.unpairing = False
+
+        if device is None:
+            try:
+                self.port = serial.tools.list_ports.comports()[0].device
+            except IndexError:
+                raise DuofernException(
+                    "No serial port configured and unable to autodetect device. Did you plug in your stick?")
+            logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
+        else:
+            self.port = device
+
+        if system_code is not None:
+            if 'dongle_serial' in self.config:
+                assert self.config['dongle_serial'].lower() == system_code.lower(), \
+                    """dongle serial given on command line differs from config file, please manually change the config file
+                    if this is what you intended. If you loose the serial you paired your devices against you might
+                    have to reset them and re-pair"""
+
+            self.serial = system_code
+        elif 'dongle_serial' in self.config:
+            self.serial = self.config['dongle_serial']
+        else:
+            self.serial = "6FABCD"
+            logger.debug("no device ID set, defaulting to {}".format(self.serial))
+
+        assert len(self.serial) == 6, "system code (serial) must be a string of 6 hexadecimal numbers"
+
+        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
 
         self.running = False
         self.pairing = False
         self.unpairing = False
         self.write_queue = []
+        self.config_file = config_file_json
+        self._dump_config()
+
+    def _dump_config(self):
+        with open(self.config_file, "w") as config_fh:
+            json.dump(self.config, config_fh, indent=4)
 
     def _initialize(self):  # DoInit
         for i in range(0, 4):
@@ -218,6 +244,11 @@ class DuofernStick(threading.Thread):
             logger.info("got pairing reply")
             self.pairing = False
             self.duofern_parser.parse(message)
+            for module_id in self.duofern_parser.modules['by_code']:
+                if module_id.lower() not in [device['id'].lower() for device in self.config['devices']]:
+                    self.config['devices'].append({'id': module_id, 'name': module_id})
+                logger.info("paired new device {}".format(module_id))
+            self._dump_config()
             return
         # if ($rmsg =~ m / 0602.{40} / ) {
         #    my %addvals = (RAWMSG => $rmsg);
@@ -260,6 +291,13 @@ class DuofernStick(threading.Thread):
         logger.info("sending command")
         logger.info(args)
         return self.duofern_parser.set(*args)
+
+    def set_name(self, id, name):
+        logger.info("renaming device {} to {}".format(id, name))
+        self.config['devices'] = [device for device in self.config['devices'] if device['id'].lower() != id.lower()]
+        self.config['devices'].append({'id': id, 'name': name})
+        self._dump_config()
+        self._initialize()
 
     def stop(self):
         self.running = False

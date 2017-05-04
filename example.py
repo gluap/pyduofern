@@ -1,22 +1,41 @@
-import time
+import argparse
+import logging
 
 from pyduofern.duofern_stick import DuofernStick
 
-stick = DuofernStick()
-stick._initialize()
-stick.start()
+parser = argparse.ArgumentParser()
+parser.add_argument('--device',
+                    help='path to serial port created by duofern stick, defaults to first found serial port, typically'
+                         'something like /dev/ttyUSB0 or /dev/rademacher if you use the provided udev rules file',
+                    default=None)
+parser.add_argument('--configfile', help='location of system config file', default=None)
+parser.add_argument('--pair', action='store_true',
+                    help='start pairing. Run this right before or after initializing pairing mode on your'
+                         'device', default=False)
+parser.add_argument('--code', help='set code for the system (warning, always use same code for once-paired devices)',
+                    default=None)
+parser.add_argument('--set_name', help='Set name for a device.', nargs=2, default=None,
+                    metavar=("DEVICE_ID", "DEVICE_NAME"))
+parser.add_argument('--list', help='list known devices', action='store_true', default=False)
+parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
-time.sleep(12)
-# print(stick.command("409882", "up"))
+args = parser.parse_args()
 
-# print(duo.set("409882","position",100))
+if __name__ == "__main__":
+    if args.debug:
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
-while True:
-    for item in stick.config["devices"]:
-        time.sleep(1)
-        if "Küche" in item['name']:
-            stick.command(item["id"], "position", 95)
-            print(item)
-            print(stick.duofern_parser.modules['by_code'][item['id']])
-stick.stop()
-stick.join()
+    stick = DuofernStick(device=args.device, system_code=args.code, config_file_json=args.configfile)
+
+    if args.set_name is not None:
+        stick.set_name(args.set_name[0], args.set_name[1])
+
+    elif args.pair:
+        print("entering pairing mode")
+        stick._initialize()
+        stick.start()
+    elif args.list:
+        print("\n".join(
+            ["id: {:6}    name: {}".format(device['id'], device['name']) for device in stick.config['devices']]))
