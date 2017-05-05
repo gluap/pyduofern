@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='pyduofern',
-      version='0.1',
+      version='0.11',
       description='Library for controlling Rademacher DuoFern actors using python. Requires the Rademacher'
                   'Duofern USB Stick Art.-Nr.: 70000093',
       classifiers=[
@@ -27,4 +27,6 @@ setup(name='pyduofern',
 
       test_suite='nose.collector',
       tests_require=['nose'],
+
+      scripts=["scripts/duofern_cli.py"]
       )

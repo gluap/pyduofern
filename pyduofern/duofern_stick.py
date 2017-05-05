@@ -96,14 +96,14 @@ class DuofernStick(threading.Thread):
                     if this is what you intended. If you loose the serial you paired your devices against you might
                     have to reset them and re-pair"""
 
-            self.serial = system_code
+            self.system_code = system_code
         elif 'dongle_serial' in self.config:
-            self.serial = self.config['dongle_serial']
+            self.system_code = self.config['dongle_serial']
         else:
-            self.serial = "6FABCD"
-            logger.debug("no device ID set, defaulting to {}".format(self.serial))
+            self.system_code = "ABCD"
+            logger.debug("no device ID set, defaulting to {}".format(self.system_code))
 
-        assert len(self.serial) == 6, "system code (serial) must be a string of 6 hexadecimal numbers"
+        assert len(self.system_code) == 6, "system code (serial) must be a string of 6 hexadecimal numbers"
 
         self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
 
@@ -132,7 +132,7 @@ class DuofernStick(threading.Thread):
             except DuofernTimeoutException:
                 continue
 
-            buf = duoSetDongle.replace("zzzzzz", self.serial)
+            buf = duoSetDongle.replace("zzzzzz", "6f" + self.system_code)
             self._simple_write(buf)
             try:
                 self._read_answer("SetDongle")
@@ -244,11 +244,7 @@ class DuofernStick(threading.Thread):
             logger.info("got pairing reply")
             self.pairing = False
             self.duofern_parser.parse(message)
-            for module_id in self.duofern_parser.modules['by_code']:
-                if module_id.lower() not in [device['id'].lower() for device in self.config['devices']]:
-                    self.config['devices'].append({'id': module_id, 'name': module_id})
-                logger.info("paired new device {}".format(module_id))
-            self._dump_config()
+            self.sync_devices()
             return
         # if ($rmsg =~ m / 0602.{40} / ) {
         #    my %addvals = (RAWMSG => $rmsg);
@@ -258,9 +254,10 @@ class DuofernStick(threading.Thread):
         #    return undef;
         #
         elif message[0:4] == '0603':
-            logger.info("got pairing reply")
+            logger.info("got unpairing reply")
             self.unpairing = False
             self.duofern_parser.parse(message)
+            self.sync_devices()
             return
         # } elsif ($rmsg =~ m/0603.{40}/) {
         #    my %addvals = (RAWMSG => $rmsg);
@@ -286,6 +283,14 @@ class DuofernStick(threading.Thread):
             #  Dispatch($hash, $rmsg, \%addvals);
         #        logger.info("got {}".format(message))
         self.duofern_parser.parse(message)
+
+    def sync_devices(self):
+        known_codes = [device['id'].lower() for device in self.config['devices']]
+        for module_id in self.duofern_parser.modules['by_code']:
+            if module_id.lower() not in known_codes:
+                self.config['devices'].append({'id': module_id, 'name': module_id})
+            logger.info("paired new device {}".format(module_id))
+        self._dump_config()
 
     def command(self, *args):
         logger.info("sending command")
@@ -315,7 +320,7 @@ class DuofernStick(threading.Thread):
         logger.info("added {} to write queueue".format(msg))
 
     def add_serial_and_send(self, msg):
-        message = msg.replace("zzzzzz", self.serial)
+        message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.info("sending {}".format(message))
         self.write_queue.append(message)
         logger.info("added {} to write queueue".format(message))
@@ -328,12 +333,12 @@ class DuofernStick(threading.Thread):
         self.write_queue.append(duoStopUnpair)
         self.unpairing = False
 
-    def pair(self):
+    def pair(self, timeout=10):
         self.write_queue.append(duoStartPair)
-        threading.Timer(10, self.stop_pair).start()
+        threading.Timer(timeout, self.stop_pair).start()
         self.pairing = True
 
-    def unpair(self):
+    def unpair(self, timeout=10):
         self.write_queue.append(duoStartUnpair)
         threading.Timer(10, self.stop_unpair).start()
         self.unpairing = True
