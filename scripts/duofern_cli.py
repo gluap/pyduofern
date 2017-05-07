@@ -108,16 +108,16 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
-        for id in ids:
-            stick.command(id, "up")
+        for blind_id in ids:
+            stick.command(blind_id, "up")
             time.sleep(2)
 
     if args.down:
         stick._initialize()
         stick.start()
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
-        for id in ids:
-            stick.command(id, "down")
+        for blind_id in ids:
+            stick.command(blind_id, "down")
             time.sleep(2)
 
     stick.stop()
