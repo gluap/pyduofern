@@ -47,7 +47,7 @@ the sources already or use the convenience mechanism and run::
 
 udev configuration
 ==================
-to make your usb stick easily to identify deploy an `udev rules <https://wiki.debian.org/udev>`_ file in
+to make your usb stick easy to identify deploy an `udev rules <https://wiki.debian.org/udev>`_ file in
 ``/etc/udev/rules.d/98-duofern.rules`` or the equivalent of your distribution. The following worked for my
 stick::
 
