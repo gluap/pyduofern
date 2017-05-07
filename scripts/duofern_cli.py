@@ -1,11 +1,30 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
+# coding=utf-8
+#   python interface for dufoern usb stick
+#   Copyright (C) 2017 Paul Görgen
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; in version 2 of the license
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software Foundation,
+#   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+
 import argparse
 import logging
+import re
 import time
 
 from pyduofern.duofern_stick import DuofernStick
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(epilog="use at your own risk")
 
 parser.add_argument('--configfile', help='location of system config file', default=None, metavar="CONFIGFILE")
 
@@ -37,6 +56,8 @@ parser.add_argument('--set_name', help='Set name for a device.', nargs=2, defaul
 
 parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
+parser.add_argument('--up', help='pull up the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
+
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -56,7 +77,11 @@ if __name__ == "__main__":
     stick = DuofernStick(device=args.device, system_code=args.code, config_file_json=args.configfile)
 
     if args.set_name is not None:
+        assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), "id for renaming" \
+                                                                                                     " must be a valid 6 digit hex ID not {}".format(
+            args.set_name[0])
         stick.set_name(args.set_name[0], args.set_name[1])
+        stick._dump_config()
 
     print("The following devices are configured:")
 
@@ -75,5 +100,10 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         time.sleep(args.refreshtime + 0.5)
+        stick.sync_devices()
 
-    if args.up
+    if args.up:
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
+    stick.stop()
+    time.sleep(1)
+    stick.join()

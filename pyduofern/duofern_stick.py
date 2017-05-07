@@ -1,3 +1,28 @@
+#!/usr/bin/env python3
+# coding=utf-8
+#   python interface for dufoern usb stick
+#   Copyright (C) 2017 Paul Görgen
+#   Rough python re-write of the FHEM duofern modules by telekatz, also licensed under GPLv2
+#   This re-write contains only negligible amounts of original code
+#   apart from some comments to facilitate translation of the not-yet
+#   translated parts of the original software. Modification dates are
+#   documented as submits to the git repository of this code, currently
+#   maintained at https://bitbucket.org/gluap/pyduofern.git
+
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software Foundation,
+#   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
 import codecs
 import json
 import logging
@@ -90,20 +115,22 @@ class DuofernStick(threading.Thread):
             self.port = device
 
         if system_code is not None:
-            if 'dongle_serial' in self.config:
-                assert self.config['dongle_serial'].lower() == system_code.lower(), \
-                    """dongle serial given on command line differs from config file, please manually change the config file
-                    if this is what you intended. If you loose the serial you paired your devices against you might
-                    have to reset them and re-pair"""
+            if 'system_code' in self.config:
+                assert self.config['system_code'].lower() == system_code.lower(), \
+                    'System code passed as argument "{}" differs from config file "{}", please manually change the ' \
+                    'config file {} if this is what you intended. If you change the code you paired your devices with' \
+                    ' you might have to reset them and re-pair.'.format(system_code,
+                                                                        self.config['system_code'],
+                                                                        os.path.abspath(config_file_json))
 
             self.system_code = system_code
-        elif 'dongle_serial' in self.config:
-            self.system_code = self.config['dongle_serial']
+        elif 'system_code' in self.config:
+            self.system_code = self.config['system_code']
         else:
-            self.system_code = "ABCD"
-            logger.debug("no device ID set, defaulting to {}".format(self.system_code))
+            raise DuofernException("No system code specified. Since the system code is a security feature no default"
+                                   "can be provided. Please re-run wiht a valid system code")
 
-        assert len(self.system_code) == 6, "system code (serial) must be a string of 6 hexadecimal numbers"
+        assert len(self.system_code) == 4, "system code (serial) must be a string of 4 hexadecimal numbers"
 
         self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
 
@@ -112,6 +139,7 @@ class DuofernStick(threading.Thread):
         self.unpairing = False
         self.write_queue = []
         self.config_file = config_file_json
+        self.config['system_code'] = self.system_code
         self._dump_config()
 
     def _dump_config(self):
@@ -286,6 +314,7 @@ class DuofernStick(threading.Thread):
 
     def sync_devices(self):
         known_codes = [device['id'].lower() for device in self.config['devices']]
+        logger.debug("known codes {}".format(known_codes))
         for module_id in self.duofern_parser.modules['by_code']:
             if module_id.lower() not in known_codes:
                 self.config['devices'].append({'id': module_id, 'name': module_id})
