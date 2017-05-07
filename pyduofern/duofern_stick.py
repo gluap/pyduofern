@@ -84,7 +84,7 @@ class DuofernStick(threading.Thread):
         threading.Thread.__init__(self)
 
         if config_file_json is None:
-            config_file_json = "duofern.json"
+            config_file_json = "~/.duofern.json"
 
         if os.path.isfile(config_file_json):
             try:

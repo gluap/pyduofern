@@ -25,8 +25,6 @@
 import logging
 import time
 
-# todo: decide on a convention for upper or lower case of hex strings
-
 # regexe for replacing:
 # hash->\{([^\}]+)\}\{([^\}]+)\}
 # hash['$1']['$2']
