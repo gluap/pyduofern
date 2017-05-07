@@ -60,7 +60,6 @@ parser.add_argument('--up', help='pull up the selected rollershutter / blinds', 
 parser.add_argument('--up', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
                     default=None)
 
-
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -80,11 +79,10 @@ if __name__ == "__main__":
     stick = DuofernStick(device=args.device, system_code=args.code, config_file_json=args.configfile)
 
     if args.set_name is not None:
-        assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), "id for renaming" \
-                                                                                                     " must be a valid 6 digit hex ID not {}".format(
-            args.set_name[0])
+        assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), \
+            "id for renaming must be a valid 6 digit hex ID not {}".format(args.set_name[0])
         stick.set_name(args.set_name[0], args.set_name[1])
-        stick._dump_config()
+        stick.sync_devices()
 
     print("The following devices are configured:")
 
