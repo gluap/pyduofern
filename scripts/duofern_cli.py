@@ -57,6 +57,9 @@ parser.add_argument('--set_name', help='Set name for a device.', nargs=2, defaul
 parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
 parser.add_argument('--up', help='pull up the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
+parser.add_argument('--up', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
+                    default=None)
+
 
 args = parser.parse_args()
 
@@ -94,6 +97,7 @@ if __name__ == "__main__":
         stick.start()
         stick.pair(timeout=args.pairtime)
         time.sleep(args.pairtime + 0.5)
+        stick.sync_devices()
         print("""""")
 
     if args.refresh:
@@ -103,7 +107,21 @@ if __name__ == "__main__":
         stick.sync_devices()
 
     if args.up:
+        stick._initialize()
+        stick.start()
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
+        for id in ids:
+            stick.command(id, "up")
+            time.sleep(2)
+
+    if args.down:
+        stick._initialize()
+        stick.start()
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
+        for id in ids:
+            stick.command(id, "down")
+            time.sleep(2)
+
     stick.stop()
     time.sleep(1)
     stick.join()
