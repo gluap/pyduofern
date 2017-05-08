@@ -43,7 +43,7 @@ Getting Started
 To install the python module run ``python setup.py install`` if you downloaded
 the sources already or use the convenience mechanism and run::
 
-     pip install git+https://bitbucket.org/gluap/pyduofern.git
+     pip3 install git+https://bitbucket.org/gluap/pyduofern.git
 
 udev configuration
 ==================
