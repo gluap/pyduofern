@@ -103,6 +103,10 @@ the config file with all paired blinds.::
 will start up the stick and listen for connecting blinds for 60 seconds. It will store all the blinds that were found
 in the default config file.a
 
+Usage with Homeassistant
+========================
+Find an example code for using these blinds with homeassistant in the examples folder
+
 
 Usage from python
 =================
