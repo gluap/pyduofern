@@ -92,8 +92,20 @@ the name ``kitchen``::
 Hopefully you now have working command line interface that knows how to move up or down your shutters. But the python
 interface can do more, (which I was so far too lazy to expose via the command line):
 
-With python you can run the duofern interface like:
+Indexing paired blinds
+----------------------
+If you have the system code of your system but lost the list of configured blinds you can use the CLI to refresh
+the config file with all paired blinds.::
 
+    # assuming you lost the config file
+    duofern_cli.py --code <your code> --refresh --refreshtime 60
+
+will start up the stick and listen for connecting blinds for 60 seconds. It will store all the blinds that were found
+in the default config file.a
+
+
+Usage from python
+=================
 .. code-block:: python
 
     from pyduofern.duofern_stick import DuofernStick
@@ -116,7 +128,7 @@ With python you can run the duofern interface like:
 
     stick.command("1ff1d3", "position", 30) # set position of the blind with code 1ff1d3 to 30%
 
-You can look for an indication of possible commands in pyduofern/definitions.py
+Look for an indication of possible commands in ``pyduofern/definitions.py``
 I just translated them into python and did not explore what might be possible.
 It looks like a lot of functionality requires a weather station, but you can just as
 easily automate the stuff using your home automation and having it send the up and down
