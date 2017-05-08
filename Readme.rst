@@ -133,6 +133,3 @@ I just translated them into python and did not explore what might be possible.
 It looks like a lot of functionality requires a weather station, but you can just as
 easily automate the stuff using your home automation and having it send the up and down
 commands instead of buying a weather station.
-
-
-
