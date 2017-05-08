@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice, PLATFORM_SCHEMA
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['+git://bitbucket.org/gluap/pyduofern.git']
+REQUIREMENTS = ['pyduofern']
 
 from pyduofern.duofern_stick import DuofernStick
 
