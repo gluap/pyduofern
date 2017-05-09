@@ -13,7 +13,7 @@ I do not provide any guarantees for the usability of this software. Use at your 
 License::
 
    python interface for dufoern usb stick
-   Copyright (C) 2017 Paul Görgen
+   Copyright (C) 2017 Paul GÃ¶rgen
    Rough python python translation of the FHEM duofern modules by telekatz
               (also licensed under GPLv2)
    This re-write does not literally contain contain any verbatim lines
@@ -57,7 +57,7 @@ Or, if you use several USB-Serial adapters with vendor ``0403`` and product ``60
 stick (assuming it is currently registered as ``/dev/ttyUSB0```)::
 
     user@host:~ > udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
-    ATTRS{serial}=="A6008isP"
+    ATTRS{serial}=="WR04ZFP4"
 
 and use the following udev line::
 
