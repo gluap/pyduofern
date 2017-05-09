@@ -57,7 +57,7 @@ parser.add_argument('--set_name', help='Set name for a device.', nargs=2, defaul
 parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
 parser.add_argument('--up', help='pull up the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
-parser.add_argument('--up', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
+parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
                     default=None)
 
 args = parser.parse_args()
