@@ -13,7 +13,7 @@ I do not provide any guarantees for the usability of this software. Use at your 
 License::
 
    python interface for dufoern usb stick
-   Copyright (C) 2017 Paul GÃ¶rgen
+   Copyright (C) 2017 Paul Görgen
    Rough python python translation of the FHEM duofern modules by telekatz
               (also licensed under GPLv2)
    This re-write does not literally contain contain any verbatim lines
@@ -50,6 +50,16 @@ udev configuration
 to make your usb stick easy to identify deploy an `udev rules <https://wiki.debian.org/udev>`_ file in
 ``/etc/udev/rules.d/98-duofern.rules`` or the equivalent of your distribution. The following worked for my
 stick::
+
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="duofernstick"
+
+Or, if you use several USB-Serial adapters with vendor ``0403`` and product ``6001`` find out the serial of your
+stick (assuming it is currently registered as ``/dev/ttyUSB0```)::
+
+    user@host:~ > udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
+    ATTRS{serial}=="A6008isP"
+
+and use the following udev line::
 
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick"
 
