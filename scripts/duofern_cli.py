@@ -60,7 +60,11 @@ parser.add_argument('--up', help='pull up the selected rollershutter / blinds', 
 parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
                     default=None)
 
+
 args = parser.parse_args()
+
+print(args.up)
+
 
 if __name__ == "__main__":
     if args.debug:
@@ -107,6 +111,7 @@ if __name__ == "__main__":
     if args.up:
         stick._initialize()
         stick.start()
+        time.sleep(10)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
         for blind_id in ids:
             stick.command(blind_id, "up")
@@ -115,6 +120,7 @@ if __name__ == "__main__":
     if args.down:
         stick._initialize()
         stick.start()
+        time.sleep(10)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
         for blind_id in ids:
             stick.command(blind_id, "down")
