@@ -59,7 +59,7 @@ stick (assuming it is currently registered as ``/dev/ttyUSB0```)::
     user@host:~ > udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
     ATTRS{serial}=="WR04ZFP4"
 
-and use the following udev line::
+and use the following udev line (use the serial you found above)::
 
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick"
 
