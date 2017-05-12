@@ -53,13 +53,13 @@ stick::
 
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="duofernstick"
 
-Or, if you use several USB-Serial adapters with vendor ``0403`` and product ``6001`` find out the serial of your
+Or, if you use several USB-Serial adapters with vendor ``0403`` and product ``6001`` find out the serial number of your
 stick (assuming it is currently registered as ``/dev/ttyUSB0```)::
 
     user@host:~ > udevadm info -a -n /dev/ttyUSB0 | grep '{serial}' | head -n1
     ATTRS{serial}=="WR04ZFP4"
 
-and use the following udev line (use the serial you found above)::
+As you can se for me the serial is ``WR04ZFP4``. Use the following udev line (use the serial you found above)::
 
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick"
 
