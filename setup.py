@@ -2,11 +2,11 @@
 from setuptools import setup
 
 setup(name='pyduofern',
-      version='0.1111111',
+      version='0.2',
       description='Library for controlling Rademacher DuoFern actors using python. Requires the Rademacher'
                   'Duofern USB Stick Art.-Nr.: 70000093',
       classifiers=[
-          'Development Status :: 1 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
           'Programming Language :: Python :: 3.4',
       ],
