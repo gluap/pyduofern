@@ -60,6 +60,16 @@ parser.add_argument('--up', help='pull up the selected rollershutter / blinds', 
 parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
                     default=None)
 
+parser.add_argument('--on', help='switch on (for "Steckdosenaktor")', metavar="NAME", nargs='+', default=None)
+parser.add_argument('--off', help='switch off (for "Steckdosenaktor")', metavar="NAME", nargs='+',
+                    default=None)
+parser.add_argument('--stairwell_on', help='switch on stairwell (for "Steckdosenaktor")', metavar="NAME", nargs='+',
+                    default=None)
+parser.add_argument('--stairwell_off', help='switch on stairwell (for "Steckdosenaktor")', metavar="NAME", nargs='+',
+                    default=None)
+
+
+
 
 args = parser.parse_args()
 
@@ -124,6 +134,48 @@ if __name__ == "__main__":
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.down]
         for blind_id in ids:
             stick.command(blind_id, "down")
+            time.sleep(2)
+
+    if args.on:
+        stick._initialize()
+        stick.start()
+        time.sleep(0.5)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.on]
+        for blind_id in ids:
+            stick.command(blind_id, "on")
+            time.sleep(2)
+
+    if args.off:
+        stick._initialize()
+        stick.start()
+        time.sleep(0.5)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.off]
+        for blind_id in ids:
+            stick.command(blind_id, "off")
+            time.sleep(2)
+
+    if args.stairwell_on:
+        stick._initialize()
+        stick.start()
+        time.sleep(0.5)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_on]
+        for blind_id in ids:
+            stick.command(blind_id, "stairwellTime", 10)
+            time.sleep(0.5)
+            stick.command(blind_id, "stairwellFunction", "on")
+            time.sleep(0.5)
+            stick.command(blind_id, "on")
+            time.sleep(2)
+
+    if args.stairwell_off:
+        stick._initialize()
+        stick.start()
+        time.sleep(0.5)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_off]
+        for blind_id in ids:
+            stick.command(blind_id, "stairwellFunction", "off")
+            time.sleep(0.5)
+            stick.command(blind_id, "on")
             time.sleep(2)
 
     stick.stop()
