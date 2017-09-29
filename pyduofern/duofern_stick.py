@@ -23,6 +23,7 @@
 #   along with this program; if not, write to the Free Software Foundation,
 #   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
+import asyncio
 import codecs
 import json
 import logging
@@ -39,8 +40,8 @@ def hex(stuff):
 import serial
 import serial.tools.list_ports
 
-from .duofern import Duofern
-from .exceptions import DuofernTimeoutException, DuofernException
+from pyduofern.duofern import Duofern
+from pyduofern.exceptions import DuofernTimeoutException, DuofernException
 
 logger = logging.getLogger(__file__)
 
@@ -71,18 +72,16 @@ def refresh_serial_connection(function):
     return new_funtion
 
 
-class DuofernStick(threading.Thread):
+class DuofernStick(object):
     def __init__(self, device=None, system_code=None, config_file_json=None, duofern_parser=None):
-        """
-        
+        """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
         :param config_file_json: path to config file. use the same one to conveniently update info about your system
         :param duofern_parser: parser object. Unless you hacked your own one just leave None and it
          defaults to pyduofern.duofern.Duofern()
         """
-        threading.Thread.__init__(self)
-
+        super().__init__()
         if config_file_json is None:
             config_file_json = os.path.expanduser("~/.duofern.json")
 
@@ -104,16 +103,7 @@ class DuofernStick(threading.Thread):
         self.pairing = False
         self.unpairing = False
 
-        if device is None:
-            try:
-                self.port = serial.tools.list_ports.comports()[0].device
-            except IndexError:
-                raise DuofernException(
-                    "No serial port configured and unable to autodetect device. Did you plug in your stick?")
-            logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
-        else:
-            self.port = device
-
+        self.system_code = None
         if system_code is not None:
             if 'system_code' in self.config:
                 assert self.config['system_code'].lower() == system_code.lower(), \
@@ -132,9 +122,6 @@ class DuofernStick(threading.Thread):
 
         assert len(self.system_code) == 4, "system code (serial) must be a string of 4 hexadecimal numbers"
 
-        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
-
-        self.running = False
         self.pairing = False
         self.unpairing = False
         self.write_queue = []
@@ -142,9 +129,164 @@ class DuofernStick(threading.Thread):
         self.config['system_code'] = self.system_code
         self._dump_config()
 
+    def _initialize(self):
+        raise NotImplementedError("need to use an implementation of the Duofernstick")
+
+    def _simple_write(self):
+        raise NotImplementedError("need to use an implementation of the Duofernstick")
+
     def _dump_config(self):
         with open(self.config_file, "w") as config_fh:
             json.dump(self.config, config_fh, indent=4)
+
+    def process_message(self, message):
+        if message[0:2] == '81':
+            logger.debug("got Acknowledged")
+            # return
+            self.handle_write_queue()
+            return ()
+        if message[0:4] == '0602':
+            logger.info("got pairing reply")
+            self.pairing = False
+            self.duofern_parser.parse(message)
+            self.sync_devices()
+            return
+        # if ($rmsg =~ m / 0602.{40} / ) {
+        #    my %addvals = (RAWMSG => $rmsg);
+        #    Dispatch($hash, $rmsg, \%addvals) if ($hash->{pair});
+        #    delete($hash->{pair});
+        #    RemoveInternalTimer($hash);
+        #    return undef;
+        #
+        elif message[0:4] == '0603':
+            logger.info("got unpairing reply")
+            self.unpairing = False
+            self.duofern_parser.parse(message)
+            self.sync_devices()
+            return
+        # } elsif ($rmsg =~ m/0603.{40}/) {
+        #    my %addvals = (RAWMSG => $rmsg);
+        #    Dispatch($hash, $rmsg, \%addvals) if ($hash->{unpair});
+        #    delete($hash->{unpair});
+        #    RemoveInternalTimer($hash);
+        #    return undef;
+        #
+        elif message[0:6] == '0FFF11':
+            return
+
+        elif message[0:8] == '81000000':
+            return
+            #  } elsif ($rmsg =~ m/0FFF11.{38}/) {
+            #    return undef;
+            #
+            #  } elsif ($rmsg =~ m/81000000.{36}/) {
+            #    return undef;
+            #
+            #  }
+            #
+            #  my %addvals = (RAWMSG => $rmsg);
+            #  Dispatch($hash, $rmsg, \%addvals);
+        #        logger.info("got {}".format(message))
+        self.duofern_parser.parse(message)
+
+    def sync_devices(self):
+        known_codes = [device['id'].lower() for device in self.config['devices']]
+        logger.debug("known codes {}".format(known_codes))
+        for module_id in self.duofern_parser.modules['by_code']:
+            if module_id.lower() not in known_codes:
+                self.config['devices'].append({'id': module_id, 'name': module_id})
+            logger.info("paired new device {}".format(module_id))
+        self._dump_config()
+
+    def command(self, *args):
+        logger.info("sending command")
+        logger.info(args)
+        return self.duofern_parser.set(*args)
+
+    def set_name(self, id, name):
+        logger.info("renaming device {} to {}".format(id, name))
+        self.config['devices'] = [device for device in self.config['devices'] if device['id'].lower() != id.lower()]
+        self.config['devices'].append({'id': id, 'name': name})
+        self._dump_config()
+        self._initialize()
+
+    def handle_write_queue(self):
+        if len(self.write_queue) > 0:
+            tosend = self.write_queue.pop()
+            logger.info("sending {} from write queue, {} msgs left in queue".format(tosend, len(self.write_queue)))
+            self._simple_write(tosend)
+
+    def send(self, msg):
+        logger.info("sending {}".format(msg))
+        self.write_queue.append(msg)
+        logger.info("added {} to write queueue".format(msg))
+
+    def add_serial_and_send(self, msg):
+        message = msg.replace("zzzzzz", "6f" + self.system_code)
+        logger.info("sending {}".format(message))
+        self.write_queue.append(message)
+        logger.info("added {} to write queueue".format(message))
+
+    def stop_pair(self):
+        self.write_queue.append(duoStopPair)
+        self.pairing = False
+
+    def stop_unpair(self):
+        self.write_queue.append(duoStopUnpair)
+        self.unpairing = False
+
+    def pair(self, timeout=10):
+        self.write_queue.append(duoStartPair)
+        threading.Timer(timeout, self.stop_pair).start()
+        self.pairing = True
+
+    def unpair(self, timeout=10):
+        self.write_queue.append(duoStartUnpair)
+        threading.Timer(10, self.stop_unpair).start()
+        self.unpairing = True
+
+    def test_callback(self, arg):
+        self.duofern_parser.parse(arg)
+
+
+class DuofernStickAsync(asyncio.Protocol, DuofernStick):
+    def __init__(self, device=None, system_code=None, config_file_json=None, duofern_parser=None):
+        super(asyncio.Protocol, self).__init__()
+        super(DuofernStick, self).__init__(device, system_code, config_file_json, duofern_parser)
+
+        # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
+        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
+        self.running = False
+
+
+class DuofernStickThreaded(DuofernStick, threading.Thread):
+    def __init__(self, device=None, **kwargs):
+        super().__init__(**kwargs)
+
+        if device is None:
+            try:
+                self.port = serial.tools.list_ports.comports()[0].device
+            except IndexError:
+                raise DuofernException(
+                    "No serial port configured and unable to autodetect device. Did you plug in your stick?")
+            logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
+        else:
+            self.port = device
+
+        # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
+        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
+        self.running = False
+
+    def _read_answer(self, some_string):  # ReadAnswer
+        """read an answer..."""
+        logger.debug("should read {}".format(some_string))
+        self.serial_connection.timeout = 1
+        response = bytearray(self.serial_connection.read(22))
+
+        if len(response) < 22:
+            raise DuofernTimeoutException
+        logger.debug("response {}".format(hex(response)))
+        return hex(response)
 
     def _initialize(self):  # DoInit
         for i in range(0, 4):
@@ -221,17 +363,6 @@ class DuofernStick(threading.Thread):
 
         raise DuofernTimeoutException("Initialization failed ")
 
-    def _read_answer(self, some_string):  # ReadAnswer
-        """read an answer..."""
-        logger.debug("should read {}".format(some_string))
-        self.serial_connection.timeout = 1
-        response = bytearray(self.serial_connection.read(22))
-
-        if len(response) < 22:
-            raise DuofernTimeoutException
-        logger.debug("response {}".format(hex(response)))
-        return hex(response)
-
     # DUOFERNSTICK_SimpleWrite(@)
     @refresh_serial_connection
     def _simple_write(self, string_to_write):  # SimpleWrite
@@ -262,118 +393,17 @@ class DuofernStick(threading.Thread):
             if len(self.write_queue) > 0:
                 self.handle_write_queue()
 
-    def process_message(self, message):
-        if message[0:2] == '81':
-            logger.debug("got Acknowledged")
-            # return
-            self.handle_write_queue()
-            return ()
-        if message[0:4] == '0602':
-            logger.info("got pairing reply")
-            self.pairing = False
-            self.duofern_parser.parse(message)
-            self.sync_devices()
-            return
-        # if ($rmsg =~ m / 0602.{40} / ) {
-        #    my %addvals = (RAWMSG => $rmsg);
-        #    Dispatch($hash, $rmsg, \%addvals) if ($hash->{pair});
-        #    delete($hash->{pair});
-        #    RemoveInternalTimer($hash);
-        #    return undef;
-        #
-        elif message[0:4] == '0603':
-            logger.info("got unpairing reply")
-            self.unpairing = False
-            self.duofern_parser.parse(message)
-            self.sync_devices()
-            return
-        # } elsif ($rmsg =~ m/0603.{40}/) {
-        #    my %addvals = (RAWMSG => $rmsg);
-        #    Dispatch($hash, $rmsg, \%addvals) if ($hash->{unpair});
-        #    delete($hash->{unpair});
-        #    RemoveInternalTimer($hash);
-        #    return undef;
-        #
-        elif message[0:6] == '0FFF11':
-            return
-
-        elif message[0:8] == '81000000':
-            return
-            #  } elsif ($rmsg =~ m/0FFF11.{38}/) {
-            #    return undef;
-            #
-            #  } elsif ($rmsg =~ m/81000000.{36}/) {
-            #    return undef;
-            #
-            #  }
-            #
-            #  my %addvals = (RAWMSG => $rmsg);
-            #  Dispatch($hash, $rmsg, \%addvals);
-        #        logger.info("got {}".format(message))
-        self.duofern_parser.parse(message)
-
-    def sync_devices(self):
-        known_codes = [device['id'].lower() for device in self.config['devices']]
-        logger.debug("known codes {}".format(known_codes))
-        for module_id in self.duofern_parser.modules['by_code']:
-            if module_id.lower() not in known_codes:
-                self.config['devices'].append({'id': module_id, 'name': module_id})
-            logger.info("paired new device {}".format(module_id))
-        self._dump_config()
-
-    def command(self, *args):
-        logger.info("sending command")
-        logger.info(args)
-        return self.duofern_parser.set(*args)
-
-    def set_name(self, id, name):
-        logger.info("renaming device {} to {}".format(id, name))
-        self.config['devices'] = [device for device in self.config['devices'] if device['id'].lower() != id.lower()]
-        self.config['devices'].append({'id': id, 'name': name})
-        self._dump_config()
-        self._initialize()
-
     def stop(self):
         self.running = False
         self.serial_connection.close()
 
-    def handle_write_queue(self):
-        if len(self.write_queue) > 0:
-            tosend = self.write_queue.pop()
-            logger.info("sending {} from write queue, {} msgs left in queue".format(tosend, len(self.write_queue)))
-            self._simple_write(tosend)
-
-    def send(self, msg):
-        logger.info("sending {}".format(msg))
-        self.write_queue.append(msg)
-        logger.info("added {} to write queueue".format(msg))
-
-    def add_serial_and_send(self, msg):
-        message = msg.replace("zzzzzz", "6f" + self.system_code)
-        logger.info("sending {}".format(message))
-        self.write_queue.append(message)
-        logger.info("added {} to write queueue".format(message))
-
-    def stop_pair(self):
-        self.write_queue.append(duoStopPair)
-        self.pairing = False
-
-    def stop_unpair(self):
-        self.write_queue.append(duoStopUnpair)
-        self.unpairing = False
-
     def pair(self, timeout=10):
-        self.write_queue.append(duoStartPair)
+        super(DuofernStickThreaded, self).pair(timeout)
         threading.Timer(timeout, self.stop_pair).start()
-        self.pairing = True
 
     def unpair(self, timeout=10):
-        self.write_queue.append(duoStartUnpair)
-        threading.Timer(10, self.stop_unpair).start()
-        self.unpairing = True
-
-    def test_callback(self, arg):
-        self.duofern_parser.parse(arg)
+        super(DuofernStickThreaded, self).unpair(timeout)
+        threading.Timer(timeout, self.stop_unpair).start()
 
 
 if __name__ == '__main__':
@@ -383,7 +413,7 @@ if __name__ == '__main__':
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
 
-    test = DuofernStick()
+    test = DuofernStickThreaded(system_code="affe")
     test._initialize()
     test.start()
     try:
