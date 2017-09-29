@@ -32,16 +32,16 @@ import os.path
 import threading
 import time
 
+import serial
+import serial.tools.list_ports
+
+from .duofern import Duofern
+from .exceptions import DuofernTimeoutException, DuofernException
+
 
 def hex(stuff):
     return codecs.getencoder('hex')(stuff)[0].decode("utf-8")
 
-
-import serial
-import serial.tools.list_ports
-
-from pyduofern.duofern import Duofern
-from pyduofern.exceptions import DuofernTimeoutException, DuofernException
 
 logger = logging.getLogger(__file__)
 
@@ -73,7 +73,7 @@ def refresh_serial_connection(function):
 
 
 class DuofernStick(object):
-    def __init__(self, device=None, system_code=None, config_file_json=None, duofern_parser=None):
+    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None):
         """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
@@ -129,10 +129,10 @@ class DuofernStick(object):
         self.config['system_code'] = self.system_code
         self._dump_config()
 
-    def _initialize(self):
+    def _initialize(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
-    def _simple_write(self):
+    def _simple_write(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
     def _dump_config(self):
@@ -250,13 +250,44 @@ class DuofernStick(object):
 
 
 class DuofernStickAsync(asyncio.Protocol, DuofernStick):
-    def __init__(self, device=None, system_code=None, config_file_json=None, duofern_parser=None):
-        super(asyncio.Protocol, self).__init__()
-        super(DuofernStick, self).__init__(device, system_code, config_file_json, duofern_parser)
+    def __init__(self, device=None):
+        super(DuofernStickAsync, self).__init__()
 
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
-        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
-        self.running = False
+
+    #        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
+    #        self.running = False
+
+    def connection_made(self, transport):
+        self.transport = transport
+        print('port opened', transport)
+        transport.serial.rts = False
+        self.buffer = bytearray(b'')
+        self.last_packet = time.time()
+
+    def data_received(self, data):
+        if self.last_packet + 0.05 < time.time():
+            self.buffer = bytearray(b'')
+        self.last_packet = time.time()
+        self.buffer += bytearray(data)
+        while len(self.buffer) >= 20:
+            self.parse(self.buffer[0:20])
+            self.buffer = self.buffer[20:]
+
+    def pause_writing(self):
+        logger.info('asked to pause writing')
+        logger.info(self.transport.get_write_buffer_size())
+
+    def resume_writing(self):
+        logger.info(self.transport.get_write_buffer_size())
+        logger.info('resume writing')
+
+    def connection_lost(self, exc):
+        logger.info('port closed')
+        asyncio.get_event_loop().stop()
+
+    def parse(self, packet):
+        logger.info(packet)
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
