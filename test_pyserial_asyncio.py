@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 import time
 
 import serial_asyncio
@@ -94,12 +95,14 @@ coro = serial_asyncio.create_serial_connection(loop, lambda: Output(loop), '/dev
 
 f, proto = loop.run_until_complete(coro)
 
+running = True
+
 
 @asyncio.coroutine
 def feed_messages(protocol):
     yield from asyncio.sleep(1)
     message = b'----            ----'
-    while True:
+    while running:
 
         future = asyncio.Future(loop=loop)
 
@@ -116,19 +119,30 @@ def feed_messages(protocol):
 
         except asyncio.CancelledError:
             logger.info("Got cancelled during initialization sequence")
+            running = False
 
 
 print("fuckin f: {}".format(f))
 print("fuckin proto: {}".format(proto))
+
+
+def cancelall():
+    print('Stopping')
+    f.close()
+    for task in asyncio.Task.all_tasks():
+        running = False
+
+        task.cancel()
+
 try:
     initialization = asyncio.async(feed_messages(proto))
     init = asyncio.wait(initialization)
     logger.info("loop forever")
+    loop.add_signal_handler(signal.SIGINT, cancelall)
 
     loop.run_forever()
 except KeyboardInterrupt:
     print('Closing connection')
     initialization.cancel()
-    proto.send_loop.cancel()
-
-loop.close()
+finally:
+    loop.close()
