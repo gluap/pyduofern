@@ -249,9 +249,37 @@ class DuofernStick(object):
         self.duofern_parser.parse(arg)
 
 
+def one_time_callback(protocol, _message, name, future):
+    logger.info("{} answer for {}".format(_message, name))
+    if not future.cancelled():
+        future.set_result(_message)
+        protocol.callback = None
+
+
+@asyncio.coroutine
+def send_and_await_reply(protocol, message, message_identifier):
+    future = asyncio.Future()
+    protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
+    yield from protocol.send_message(message.encode("utf-8"))
+    try:
+        result = yield from future
+        logger.info("got reply {}".format(result))
+    except asyncio.CancelledError:
+        logger.info("future was cancelled waiting for reply")
+
+
 class DuofernStickAsync(asyncio.Protocol, DuofernStick):
-    def __init__(self, device=None):
+    def __init__(self, loop=None, device=None):
         super(DuofernStickAsync, self).__init__()
+        self.initialization_step = 0
+        self.loop = loop
+        self.write_queue = asyncio.Queue()
+        self._ready = asyncio.Event()
+        self.transport = None
+        self.buffer = None
+        self.last_packet = 0.0
+        self.callback = None
+        self.send_loop = asyncio.async(self._send_messages())
 
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
 
@@ -260,10 +288,11 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
 
     def connection_made(self, transport):
         self.transport = transport
-        print('port opened', transport)
+        logger.info('port opened {}')
         transport.serial.rts = False
         self.buffer = bytearray(b'')
         self.last_packet = time.time()
+        self._ready.set()
 
     def data_received(self, data):
         if self.last_packet + 0.05 < time.time():
@@ -271,23 +300,73 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         self.last_packet = time.time()
         self.buffer += bytearray(data)
         while len(self.buffer) >= 20:
-            self.parse(self.buffer[0:20])
+            if hasattr(self, 'callback') and self.callback is not None:
+                self.callback(self.buffer[0:20])
+            else:
+                self.parse(self.buffer[0:20])
             self.buffer = self.buffer[20:]
 
     def pause_writing(self):
-        logger.info('asked to pause writing')
+        logger.info('pause writing')
         logger.info(self.transport.get_write_buffer_size())
 
     def resume_writing(self):
         logger.info(self.transport.get_write_buffer_size())
         logger.info('resume writing')
 
-    def connection_lost(self, exc):
-        logger.info('port closed')
-        asyncio.get_event_loop().stop()
-
     def parse(self, packet):
         logger.info(packet)
+
+    @asyncio.coroutine
+    def send_message(self, data):
+        """ Feed a message to the sender coroutine. """
+        yield from self.write_queue.put(data)
+
+    @asyncio.coroutine
+    def _send_messages(self):
+        """ Send messages to the server as they become available. """
+        yield from self._ready.wait()
+        logger.debug("Starting async send loop!")
+        while True:
+            try:
+                data = yield from self.write_queue.get()
+                self.transport.write(data)
+            except asyncio.CancelledError:
+                logger.info("Got CancelledError, stopping send loop")
+                break
+            logger.debug("sending {}".format(data))
+
+    def parse_regular(self, packet):
+        logger.info(packet)
+
+    @asyncio.coroutine
+    def handshake(self, protocol):
+        yield from asyncio.sleep(2)
+        HANDSHAKE = [(duoInit1, "INIT1"),
+                     (duoInit2, "INIT2"),
+                     (duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle"),
+                     (duoACK),
+                     (duoInit3, "INIT3")]
+        yield from send_and_await_reply(protocol, duoInit1, "init 1")
+        yield from send_and_await_reply(protocol, duoInit2, "init 2")
+        yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(protocol, duoInit3, "init 3")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
+        logger.info(self.config)
+        if "devices" in self.config:
+            counter = 0
+            for device in self.config['devices']:
+                hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
+                yield from send_and_await_reply(protocol, hex_to_write, "SetPairs")
+                yield from protocol.send_message(duoACK.encode("utf-8"))
+                counter += 1
+                self.duofern_parser.add_device(device['id'], device['name'])
+
+        yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
@@ -362,37 +441,10 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                     counter += 1
                     self.duofern_parser.add_device(device['id'], device['name'])
 
-            # my counter = 0
-            # foreach (@pairs){
-            #   buf = duoSetPairs
-            #   my chex .= sprintf "%02x", counter
-            #   buf =~ s/nn/chex/
-            #   buf =~ s/yyyyyy/_/
-            #   self._simple_write(buf)
-            #   (err, buf) = self._read_answer("SetPairs")
-            #   next if(err)
-            #   self._simple_write(duoACK)
-            #   counter++
-            # }
-
-            self._simple_write(duoInitEnd)
-            try:
-                self._read_answer("INIT3")
-            except DuofernTimeoutException:  # look @ original
-                return False
-            self._simple_write(duoACK)
-
-            self._simple_write(duoStatusRequest)
-            try:
-                self._read_answer("statusRequest")
-            except DuofernTimeoutException:
-                continue
-            self._simple_write(duoACK)
-
-            # readingsSingleUpdate(hash, "state", "Initialized", 1)
-            return True
-
-        raise DuofernTimeoutException("Initialization failed ")
+        yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
+        yield from protocol.send_message(duoACK.encode("utf-8"))
 
     # DUOFERNSTICK_SimpleWrite(@)
     @refresh_serial_connection

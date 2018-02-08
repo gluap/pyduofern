@@ -5,6 +5,8 @@ import time
 
 import serial_asyncio
 
+from pyduofern.duofern_stick import duoInit1, duoInit2, duoInit3, duoACK, duoSetDongle
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='pyduofern/%(module)s(%(lineno)d): %(levelname)s %(message)s', level=logging.DEBUG)
 
@@ -25,14 +27,6 @@ class Output(asyncio.Protocol):
         self.callback = None
         self.send_loop = asyncio.async(self._send_messages())
 
-    def _initialize(self, future):
-        logger.warning("someone called?")
-        yield asyncio.sleep(0.1)
-        if b'10001               ' in self.buffer:
-            future.set_result(True)
-        else:
-            future.set_result(False)
-
     def connection_made(self, transport):
         self.transport = transport
         logger.info('port opened {}')
@@ -47,7 +41,7 @@ class Output(asyncio.Protocol):
         self.last_packet = time.time()
         self.buffer += bytearray(data)
         while len(self.buffer) >= 20:
-            if self.callback:
+            if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(self.buffer[0:20])
             else:
                 self.parse(self.buffer[0:20])
@@ -93,35 +87,58 @@ class Output(asyncio.Protocol):
 loop = asyncio.get_event_loop()
 coro = serial_asyncio.create_serial_connection(loop, lambda: Output(loop), '/dev/ttyUSB0', baudrate=115200)
 
-f, proto = loop.run_until_complete(coro)
-
 running = True
 
 
+def one_time_callback(protocol, _message, name, future):
+    logger.info("{} answer for {}".format(_message, name))
+    if not future.cancelled():
+        future.set_result(_message)
+        protocol.callback = None
+
 @asyncio.coroutine
-def feed_messages(protocol):
-    yield from asyncio.sleep(1)
-    message = b'----            ----'
-    while running:
-
-        future = asyncio.Future(loop=loop)
-
-        def one_time_callback(message):
-            if not future.cancelled():
-                future.set_result(message)
-                protocol.callback = None
-
-        protocol.callback = one_time_callback
-        yield from protocol.send_message(message)
-        try:
-            result = yield from future
-            logger.info("awaited future, result: {}".format(result))
-
-        except asyncio.CancelledError:
-            logger.info("Got cancelled during initialization sequence")
-            running = False
+def send_and_await_reply(protocol, message, message_identifier):
+    future = asyncio.Future()
+    protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
+    yield from protocol.send_message(message.encode("utf-8"))
+    try:
+        result = yield from future
+        logger.info("got reply {}".format(result))
+    except asyncio.CancelledError:
+        logger.info("future was cancelled waiting for reply")
 
 
+@asyncio.coroutine
+def handshake(protocol):
+    yield from asyncio.sleep(2)
+    HANDSHAKE = [(duoInit1, "INIT1"),
+                 (duoInit2, "INIT2"),
+                 (duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle"),
+                 (duoACK),
+                 (duoInit3, "INIT3")]
+    yield from send_and_await_reply(protocol, duoInit1, "init 1")
+    yield from send_and_await_reply(protocol, duoInit2, "init 2")
+    yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle")
+    yield from protocol.send_message(duoACK.encode("utf-8"))
+    yield from send_and_await_reply(protocol, duoInit3, "init 3")
+    yield from protocol.send_message(duoACK.encode("utf-8"))
+    logger.info(self.config)
+    if "devices" in self.config:
+        counter = 0
+        for device in self.config['devices']:
+            hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
+            yield from send_and_await_reply(protocol, hex_to_write, "SetPairs")
+            yield from protocol.send_message(duoACK.encode("utf-8"))
+            counter += 1
+            self.duofern_parser.add_device(device['id'], device['name'])
+
+    yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
+    yield from protocol.send_message(duoACK.encode("utf-8"))
+    yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
+    yield from protocol.send_message(duoACK.encode("utf-8"))
+
+
+f, proto = loop.run_until_complete(coro)
 print("fuckin f: {}".format(f))
 print("fuckin proto: {}".format(proto))
 
@@ -130,12 +147,11 @@ def cancelall():
     print('Stopping')
     f.close()
     for task in asyncio.Task.all_tasks():
-        running = False
-
         task.cancel()
 
+
 try:
-    initialization = asyncio.async(feed_messages(proto))
+    initialization = asyncio.async(handshake(proto))
     init = asyncio.wait(initialization)
     logger.info("loop forever")
     loop.add_signal_handler(signal.SIGINT, cancelall)
