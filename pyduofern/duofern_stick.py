@@ -225,7 +225,7 @@ class DuofernStick(object):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.info("sending {}".format(message))
         self.send(message)
-        logger.info("added {} to write queueue".format(message))
+        logger.info("added {} to write queue".format(message))
 
     def stop_pair(self):
         self.send(duoStopPair)
@@ -318,7 +318,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         logger.info(packet)
 
     @asyncio.coroutine
-    def send_message(self, data):
+    def send(self, data):
         """ Feed a message to the sender coroutine. """
         yield from self.write_queue.put(data)
 
@@ -441,10 +441,38 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                     counter += 1
                     self.duofern_parser.add_device(device['id'], device['name'])
 
-        yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
-        yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
+            # my counter = 0
+            # foreach (@pairs){
+            #   buf = duoSetPairs
+            #   my chex .= sprintf "%02x", counter
+            #   buf =~ s/nn/chex/
+            #   buf =~ s/yyyyyy/_/
+            #   self._simple_write(buf)
+            #   (err, buf) = self._read_answer("SetPairs")
+            #   next if(err)
+            #   self._simple_write(duoACK)
+            #   counter++
+            # }
+
+            self._simple_write(duoInitEnd)
+            try:
+                self._read_answer("INIT3")
+            except DuofernTimeoutException:  # look @ original
+                return False
+            self._simple_write(duoACK)
+
+            self._simple_write(duoStatusRequest)
+            try:
+                self._read_answer("statusRequest")
+            except DuofernTimeoutException:
+                continue
+            self._simple_write(duoACK)
+
+            # readingsSingleUpdate(hash, "state", "Initialized", 1)
+            return True
+
+        raise DuofernTimeoutException("Initialization failed ")
+
 
     # DUOFERNSTICK_SimpleWrite(@)
     @refresh_serial_connection
