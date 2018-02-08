@@ -299,12 +299,12 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
             self.buffer = bytearray(b'')
         self.last_packet = time.time()
         self.buffer += bytearray(data)
-        while len(self.buffer) >= 20:
+        while len(self.buffer) >= 22:
             if hasattr(self, 'callback') and self.callback is not None:
-                self.callback(self.buffer[0:20])
+                self.callback(self.buffer[0:22])
             else:
-                self.parse(self.buffer[0:20])
-            self.buffer = self.buffer[20:]
+                self.process_message(self.buffer[0:22])
+            self.buffer = self.buffer[22:]
 
     def pause_writing(self):
         logger.info('pause writing')
@@ -349,7 +349,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
                      (duoInit3, "INIT3")]
         yield from send_and_await_reply(protocol, duoInit1, "init 1")
         yield from send_and_await_reply(protocol, duoInit2, "init 2")
-        yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle")
+        yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
         yield from protocol.send_message(duoACK.encode("utf-8"))
         yield from send_and_await_reply(protocol, duoInit3, "init 3")
         yield from protocol.send_message(duoACK.encode("utf-8"))
