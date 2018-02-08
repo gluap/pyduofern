@@ -128,6 +128,7 @@ class DuofernStick(object):
         self.config_file = config_file_json
         self.config['system_code'] = self.system_code
         self._dump_config()
+        self.initialized = False
 
     def _initialize(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
@@ -260,7 +261,7 @@ def one_time_callback(protocol, _message, name, future):
 def send_and_await_reply(protocol, message, message_identifier):
     future = asyncio.Future()
     protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
-    yield from protocol.send_message(message.encode("utf-8"))
+    yield from protocol.send(message.encode("utf-8"))
     try:
         result = yield from future
         logger.info("got reply {}".format(result))
@@ -279,6 +280,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         self.buffer = None
         self.last_packet = 0.0
         self.callback = None
+
         self.send_loop = asyncio.async(self._send_messages())
 
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
@@ -301,9 +303,9 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         self.buffer += bytearray(data)
         while len(self.buffer) >= 22:
             if hasattr(self, 'callback') and self.callback is not None:
-                self.callback(self.buffer[0:22])
-            else:
-                self.process_message(self.buffer[0:22])
+                self.callback(str(self.buffer[0:22]))
+            elif self.initialized:
+                self.process_message(str(self.buffer[0:22]))
             self.buffer = self.buffer[22:]
 
     def pause_writing(self):
@@ -340,28 +342,30 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         logger.info(packet)
 
     @asyncio.coroutine
-    def handshake(self, protocol):
+    def handshake(self):
         yield from asyncio.sleep(2)
-        yield from send_and_await_reply(protocol, duoInit1, "init 1")
-        yield from send_and_await_reply(protocol, duoInit2, "init 2")
-        yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
-        yield from send_and_await_reply(protocol, duoInit3, "init 3")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
+        logger.info("now handshaking")
+        yield from send_and_await_reply(self, duoInit1, "init 1")
+        yield from send_and_await_reply(self, duoInit2, "init 2")
+        yield from send_and_await_reply(self, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
+        yield from self.send(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(self, duoInit3, "init 3")
+        yield from self.send(duoACK.encode("utf-8"))
         logger.info(self.config)
         if "devices" in self.config:
             counter = 0
             for device in self.config['devices']:
                 hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
-                yield from send_and_await_reply(protocol, hex_to_write, "SetPairs")
-                yield from protocol.send_message(duoACK.encode("utf-8"))
+                yield from send_and_await_reply(self, hex_to_write, "SetPairs")
+                yield from self.send(duoACK.encode("utf-8"))
                 counter += 1
                 self.duofern_parser.add_device(device['id'], device['name'])
 
-        yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
-        yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
-        yield from protocol.send_message(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(self, duoInitEnd, "duoInitEnd")
+        yield from self.send(duoACK.encode("utf-8"))
+        yield from send_and_await_reply(self, duoStatusRequest, "duoInitEnd")
+        yield from self.send(duoACK.encode("utf-8"))
+        self.initialized = True
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
@@ -467,7 +471,6 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             return True
 
         raise DuofernTimeoutException("Initialization failed ")
-
 
     # DUOFERNSTICK_SimpleWrite(@)
     @refresh_serial_connection
