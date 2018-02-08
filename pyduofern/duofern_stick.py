@@ -342,11 +342,6 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
     @asyncio.coroutine
     def handshake(self, protocol):
         yield from asyncio.sleep(2)
-        HANDSHAKE = [(duoInit1, "INIT1"),
-                     (duoInit2, "INIT2"),
-                     (duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle"),
-                     (duoACK),
-                     (duoInit3, "INIT3")]
         yield from send_and_await_reply(protocol, duoInit1, "init 1")
         yield from send_and_await_reply(protocol, duoInit2, "init 2")
         yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
