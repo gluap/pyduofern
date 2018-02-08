@@ -224,24 +224,24 @@ class DuofernStick(object):
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.info("sending {}".format(message))
-        self.write_queue.append(message)
+        self.send(message)
         logger.info("added {} to write queueue".format(message))
 
     def stop_pair(self):
-        self.write_queue.append(duoStopPair)
+        self.send(duoStopPair)
         self.pairing = False
 
     def stop_unpair(self):
-        self.write_queue.append(duoStopUnpair)
+        self.send(duoStopUnpair)
         self.unpairing = False
 
     def pair(self, timeout=10):
-        self.write_queue.append(duoStartPair)
+        self.send(duoStartPair)
         threading.Timer(timeout, self.stop_pair).start()
         self.pairing = True
 
     def unpair(self, timeout=10):
-        self.write_queue.append(duoStartUnpair)
+        self.send(duoStartUnpair)
         threading.Timer(10, self.stop_unpair).start()
         self.unpairing = True
 
