@@ -22,7 +22,7 @@ import logging
 import re
 import time
 
-from pyduofern.duofern_stick import DuofernStick
+from pyduofern.duofern_stick import DuofernStickThreaded
 
 parser = argparse.ArgumentParser(epilog="use at your own risk")
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
             print("System code must be a 4 digit hex code")
             exit(1)
 
-    stick = DuofernStick(device=args.device, system_code=args.code, config_file_json=args.configfile)
+    stick = DuofernStickThreaded(device=args.device, system_code=args.code, config_file_json=args.configfile)
 
     if args.set_name is not None:
         assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), \
@@ -124,6 +124,8 @@ if __name__ == "__main__":
         time.sleep(0.5)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
         for blind_id in ids:
+            logging.info("partytime upping {}".format(blind_id))
+            logging.info(stick.duofern_parser.asyncio)
             stick.command(blind_id, "up")
             time.sleep(2)
 

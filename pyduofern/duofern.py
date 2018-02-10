@@ -86,7 +86,8 @@ def DUOFERN_DecodeWeatherSensorConfig(*args):
 
 
 class Duofern(object):
-    def __init__(self, send_hook=None):
+    def __init__(self, send_hook=None, asyncio=False):
+        self.asyncio = asyncio
         self.modules = {'by_code': {}}  # i guess this is supposed to be a hash of self.modules...
         self.ignore_devices = {}  # should replace attrValrel
         assert send_hook is not None, "Must define send callback"
@@ -656,7 +657,7 @@ class Duofern(object):
         return name
 
     def send(self, cmd):
-        self.send_hook(cmd)
+        yield from self.send_hook(cmd)
 
     def set(self, code, cmd, *args):
         # my (hash, @a) = @_
@@ -711,8 +712,7 @@ class Duofern(object):
             buf = duoStatusRequest
             buf = buf.replace("nn", commandsStatus[cmd])
             buf = buf.replace("yyyyyy", code)
-
-            self.send(buf)
+            yield from self.send(buf)
             return None
 
         elif cmd == "clear":
@@ -728,8 +728,7 @@ class Duofern(object):
         elif cmd == "getConfig":
             buf = duoWeatherConfig
             buf = buf.replace("yyyyyy", code)
-
-            self.send(buf)
+            yield from self.send(buf)
             return None
 
         elif cmd == "writeConfig":
@@ -742,7 +741,7 @@ class Duofern(object):
                 buf = buf.replace("yyyyyy", code)
                 buf = buf.replace("rr", reg)
                 buf = buf.replace("nnnnnnnnnnnnnnnnnnnn", regV)
-
+                yield from self.send(buf)
                 self.send(buf)
 
             if "configModified" in self.modules['by_code'][code]:
@@ -765,8 +764,7 @@ class Duofern(object):
             buf = buf.replace("mmmmmmmm", m)
             buf = buf.replace("nnnnnn", n)
             buf = buf.replace("yyyyyy", code)
-
-            self.send(buf)
+            yield from self.send(buf)
             return None
 
         elif cmd in wCmds:
@@ -1051,8 +1049,7 @@ class Duofern(object):
             buf = buf.replace("wwww", argW)
             buf = buf.replace("cc", chanNo)
             logger.info("trying to send {}".format(buf))
-            self.send(buf)
-
+            yield from self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
 

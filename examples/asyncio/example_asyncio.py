@@ -35,9 +35,18 @@ loop = asyncio.get_event_loop()
 
 coro = serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(loop), '/dev/ttyUSB0', baudrate=115200)
 f, proto = loop.run_until_complete(coro)
-proto.handshake()
+# proto.handshake()
 
 initialization = asyncio.async(proto.handshake())
-init = asyncio.wait(initialization)
+asyncio.wait(initialization)
+
+
+def cb(a):
+    logging.info(a)
+    asyncio.async(proto.command("409882", "position", 10))
+
+
+proto.available.add_done_callback(cb)
+
 
 loop.run_forever()

@@ -136,6 +136,9 @@ class DuofernStick(object):
     def _simple_write(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
+    def send(self, **kwargs):
+        raise NotImplementedError("need to use an implementation of the Duofernstick")
+
     def _dump_config(self):
         with open(self.config_file, "w") as config_fh:
             json.dump(self.config, config_fh, indent=4)
@@ -199,11 +202,6 @@ class DuofernStick(object):
             logger.info("paired new device {}".format(module_id))
         self._dump_config()
 
-    def command(self, *args):
-        logger.info("sending command")
-        logger.info(args)
-        return self.duofern_parser.set(*args)
-
     def set_name(self, id, name):
         logger.info("renaming device {} to {}".format(id, name))
         self.config['devices'] = [device for device in self.config['devices'] if device['id'].lower() != id.lower()]
@@ -216,17 +214,6 @@ class DuofernStick(object):
             tosend = self.write_queue.pop()
             logger.info("sending {} from write queue, {} msgs left in queue".format(tosend, len(self.write_queue)))
             self._simple_write(tosend)
-
-    def send(self, msg):
-        logger.info("sending {}".format(msg))
-        self.write_queue.append(msg)
-        logger.info("added {} to write queueue".format(msg))
-
-    def add_serial_and_send(self, msg):
-        message = msg.replace("zzzzzz", "6f" + self.system_code)
-        logger.info("sending {}".format(message))
-        self.send(message)
-        logger.info("added {} to write queue".format(message))
 
     def stop_pair(self):
         self.send(duoStopPair)
@@ -272,6 +259,7 @@ def send_and_await_reply(protocol, message, message_identifier):
 class DuofernStickAsync(asyncio.Protocol, DuofernStick):
     def __init__(self, loop=None, device=None):
         super(DuofernStickAsync, self).__init__()
+        self.duofern_parser.asyncio = True
         self.initialization_step = 0
         self.loop = loop
         self.write_queue = asyncio.Queue()
@@ -283,10 +271,25 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
 
         self.send_loop = asyncio.async(self._send_messages())
 
+        self.available = asyncio.Future()
+
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
 
     #        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
     #        self.running = False
+
+    @asyncio.coroutine
+    def command(self, *args):
+        logger.info("sending command")
+        logger.info(args)
+        yield from self.duofern_parser.set(*args)
+
+    @asyncio.coroutine
+    def add_serial_and_send(self, msg):
+        message = msg.replace("zzzzzz", "6f" + self.system_code)
+        logger.info("sending {}".format(message))
+        yield from self.send(message)
+        logger.info("added {} to write queue".format(message))
 
     def connection_made(self, transport):
         self.transport = transport
@@ -332,6 +335,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         logger.debug("Starting async send loop!")
         while True:
             try:
+                logger.info("sending from stack")
                 data = yield from self.write_queue.get()
                 self.transport.write(data)
             except asyncio.CancelledError:
@@ -362,10 +366,10 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
                 self.duofern_parser.add_device(device['id'], device['name'])
 
         yield from send_and_await_reply(self, duoInitEnd, "duoInitEnd")
-        yield from self.send(duoACK.encode("utf-8"))
+        yield from self.send(duoACK)
         yield from send_and_await_reply(self, duoStatusRequest, "duoInitEnd")
-        yield from self.send(duoACK.encode("utf-8"))
-        self.initialized = True
+        yield from self.send(duoACK)
+        self.available.set_result(True)
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
@@ -483,6 +487,17 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.open()
         self.serial_connection.write(data_to_write)
 
+    def command(self, *args):
+        logger.info("sending command")
+        logger.info(args)
+        list(self.duofern_parser.set(*args))
+
+    def add_serial_and_send(self, msg):
+        message = msg.replace("zzzzzz", "6f" + self.system_code)
+        logger.info("sending {}".format(message))
+        self.send(message)
+        logger.info("added {} to write queue".format(message))
+
     def run(self):
         self.running = True
         self._initialize()
@@ -513,6 +528,11 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     def unpair(self, timeout=10):
         super(DuofernStickThreaded, self).unpair(timeout)
         threading.Timer(timeout, self.stop_unpair).start()
+
+    def send(self, msg):
+        logger.info("sending {}".format(msg))
+        self.write_queue.append(msg)
+        logger.info("added {} to write queueue".format(msg))
 
 
 if __name__ == '__main__':
