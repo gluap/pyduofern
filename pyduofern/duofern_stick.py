@@ -261,7 +261,7 @@ def one_time_callback(protocol, _message, name, future):
 def send_and_await_reply(protocol, message, message_identifier):
     future = asyncio.Future()
     protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
-    yield from protocol.send(message.encode("utf-8"))
+    yield from protocol.send(message)
     try:
         result = yield from future
         logger.info("got reply {}".format(result))
@@ -322,8 +322,8 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
     @asyncio.coroutine
     def send(self, data):
         """ Feed a message to the sender coroutine. """
-        bytearray.fromhex(data)
-        yield from self.write_queue.put(data)
+        tosend = bytearray.fromhex(data)
+        yield from self.write_queue.put(tosend)
 
     @asyncio.coroutine
     def _send_messages(self):
@@ -337,7 +337,6 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
             except asyncio.CancelledError:
                 logger.info("Got CancelledError, stopping send loop")
                 break
-            logger.debug("sending {}".format(data))
 
     def parse_regular(self, packet):
         logger.info(packet)
@@ -349,16 +348,16 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         yield from send_and_await_reply(self, duoInit1, "init 1")
         yield from send_and_await_reply(self, duoInit2, "init 2")
         yield from send_and_await_reply(self, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
-        yield from self.send(duoACK.encode("utf-8"))
+        yield from self.send(duoACK)
         yield from send_and_await_reply(self, duoInit3, "init 3")
-        yield from self.send(duoACK.encode("utf-8"))
+        yield from self.send(duoACK)
         logger.info(self.config)
         if "devices" in self.config:
             counter = 0
             for device in self.config['devices']:
                 hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
                 yield from send_and_await_reply(self, hex_to_write, "SetPairs")
-                yield from self.send(duoACK.encode("utf-8"))
+                yield from self.send(duoACK)
                 counter += 1
                 self.duofern_parser.add_device(device['id'], device['name'])
 
