@@ -8,4 +8,4 @@ dist/**
 *.egg-info/**
 .coverage
 .idea/**
-duofern.json
+**/duofern.json
