@@ -303,9 +303,9 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         self.buffer += bytearray(data)
         while len(self.buffer) >= 22:
             if hasattr(self, 'callback') and self.callback is not None:
-                self.callback(str(self.buffer[0:22]))
+                self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
-                self.process_message(str(self.buffer[0:22]))
+                self.process_message(hex(self.buffer[0:22]))
             self.buffer = self.buffer[22:]
 
     def pause_writing(self):
