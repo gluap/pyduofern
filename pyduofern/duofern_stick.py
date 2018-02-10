@@ -322,6 +322,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
     @asyncio.coroutine
     def send(self, data):
         """ Feed a message to the sender coroutine. """
+        bytearray.fromhex(data)
         yield from self.write_queue.put(data)
 
     @asyncio.coroutine
