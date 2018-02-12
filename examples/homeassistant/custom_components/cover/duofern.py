@@ -17,8 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional('serial_port', default="/dev/duofernstick"): cv.string,
-    vol.Optional('config_file', default="~/.duofern.json"): cv.string,
+    vol.Optional('serial_port', default=None): cv.string,
+    vol.Optional('config_file', default=None): cv.string,
     vol.Optional('code', default=None): cv.string,
 })
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'duofern' not in hass.data:
         hass.data['duofern'] = {
-            'stick': DuofernStickThreaded(device=serial_port, system_code=code, config_file_json=configfile)}
+            'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile)}
         hass.data['duofern']['stick'].start()
 
     # Setup connection with devices/cloud

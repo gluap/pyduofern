@@ -118,7 +118,7 @@ class DuofernStick(object):
             self.system_code = self.config['system_code']
         else:
             raise DuofernException("No system code specified. Since the system code is a security feature no default"
-                                   "can be provided. Please re-run wiht a valid system code")
+                                   "can be provided. Please re-run wiht a valid system code {}".format(self.config))
 
         assert len(self.system_code) == 4, "system code (serial) must be a string of 4 hexadecimal numbers"
 
@@ -257,7 +257,7 @@ def send_and_await_reply(protocol, message, message_identifier):
 
 
 class DuofernStickAsync(asyncio.Protocol, DuofernStick):
-    def __init__(self, loop=None, device=None):
+    def __init__(self, loop=None):
         super(DuofernStickAsync, self).__init__()
         self.duofern_parser.asyncio = True
         self.initialization_step = 0
@@ -373,10 +373,10 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
-    def __init__(self, device=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, serial_port=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        if device is None:
+        if serial_port is None:
             try:
                 self.port = serial.tools.list_ports.comports()[0].device
             except IndexError:
@@ -384,7 +384,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                     "No serial port configured and unable to autodetect device. Did you plug in your stick?")
             logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
         else:
-            self.port = device
+            self.port = serial_port
 
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
         self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)

@@ -13,11 +13,13 @@ respective sections.::
 
     cover:
       - platform: duofern
-        serial_port: # optional, defaults to "/dev/duofernstick"
+        serial_port: # optional, defaults to first detected tty. You probably want to adapt this, for example
+                     # to /dev/duofernstick after adapting your udev config
         config_file: # optional, defaults to ~/.dufoern.json
-        code: asdf # optional if correctly defined in .duofern.json
+        code: beef # 4 hex digits, optional if correctly defined in .duofern.json
+    # light is basically a duplicate... sorry
     light:
       - platform: duofern
-        serial_port: # optional, defaults to "/dev/duofernstick"
-        config_file: # optional, defaults to ~/.dufoern.json
-        code: asdf # optional if correctly defined in .duofern.json
+        serial_port: # see above
+        config_file: # see above
+        code: beef # see above

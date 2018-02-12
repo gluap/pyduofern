@@ -90,7 +90,7 @@ if __name__ == "__main__":
             print("System code must be a 4 digit hex code")
             exit(1)
 
-    stick = DuofernStickThreaded(device=args.device, system_code=args.code, config_file_json=args.configfile)
+    stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code, config_file_json=args.configfile)
 
     if args.set_name is not None:
         assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), \
