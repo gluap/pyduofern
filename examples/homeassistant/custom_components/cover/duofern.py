@@ -11,7 +11,7 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice, PLATFORM_
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['pyduofern']
 
-from pyduofern.duofern_stick import DuofernStick
+from pyduofern.duofern_stick import DuofernStickThreaded
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'duofern' not in hass.data:
         hass.data['duofern'] = {
-            'stick': DuofernStick(device=serial_port, system_code=code, config_file_json=configfile)}
+            'stick': DuofernStickThreaded(device=serial_port, system_code=code, config_file_json=configfile)}
         hass.data['duofern']['stick'].start()
 
     # Setup connection with devices/cloud

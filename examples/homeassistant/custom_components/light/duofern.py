@@ -11,8 +11,6 @@ from homeassistant.components.light import Light, PLATFORM_SCHEMA
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['pyduofern']
 
-from pyduofern.duofern_stick import DuofernStick
-
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
