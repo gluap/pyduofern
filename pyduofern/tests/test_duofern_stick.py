@@ -48,13 +48,13 @@ class TestInitialize(unittest.TestCase):
         # self.df.serial.Serial.read = read_mock
 
     def test_init(self):
-        test = self.df.DuofernStickThreaded(device="bla")
+        test = self.df.DuofernStickThreaded(serial_port="bla")
         test.serial_connection = Mock()
         test.serial_connection.read = read_mock
         test._initialize()
 
     def test_run(self):
-        test = self.df.DuofernStickThreaded(device="bla")
+        test = self.df.DuofernStickThreaded(serial_port="bla")
         test.serial_connection = Mock()
         test.serial_connection.read = read_mock
         test._initialize()
