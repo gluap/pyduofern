@@ -61,10 +61,11 @@ stick (assuming it is currently registered as ``/dev/ttyUSB0```)::
 
 As you can se for me the serial is ``WR04ZFP4``. Use the following udev line (use the serial you found above)::
 
-    SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick"
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick" MODE="666"
 
 Once the rule is deployed your stick should show up as ``/dev/duofernstick`` as soon as you plug it in. This
-helps avoid confusion if you use other usb-serial devices.
+helps avoid confusion if you use other usb-serial devices. Also be warned: The line also makes the stick 
+accessible to non-root users. But likely on your system you will be the only user anyhow.
 
 Getting Started
 ===============
