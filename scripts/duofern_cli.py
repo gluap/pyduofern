@@ -22,6 +22,8 @@ import logging
 import re
 import time
 
+from cmd import Cmd
+
 from pyduofern.duofern_stick import DuofernStickThreaded
 
 parser = argparse.ArgumentParser(epilog="use at your own risk")
@@ -69,14 +71,160 @@ parser.add_argument('--stairwell_off', help='switch on stairwell (for "Steckdose
                     default=None)
 
 
+def splitargs(func):
+    def wrapper(*args, **kwargs):
+        func(args[0], args[1].split(" "))
+
+    return wrapper
 
 
-args = parser.parse_args()
+def ids_for_names(func):
+    def wrapper(*args, **kwargs):
+        id_dict = {device['id']: device['name'] for device in args[0].stick.config['devices']
+                   if device['name'] in args[1]}
+        func(args[0], id_dict)
 
-print(args.up)
+    return wrapper
+
+
+class DuofernCLI(Cmd):
+    def __init__(self, serial_port=None, system_code=None, config_file=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code,
+                                          config_file_json=args.configfile)
+        self.stick._initialize()
+        self.stick.start()
+        self.prompt = "duofern> "
+
+    def emptyline(self):
+        pass
+
+    def do_pair(self, args):
+        """
+        Usage:
+          pair <TIMEOUT>
+        
+        Start pairing mode. Pass a timeout in seconds as <TIMEOUT>.
+        Will return after the timeout if no devices start pairing within the given timeout.
+        
+        Example:
+        duofern> pair 10
+            
+        """
+        timeout = 10
+        if len(args) != 0:
+            try:
+                timeout = int(args[0])
+            except:
+                print("Please use an integer number to indicate TIMEOUT in seconds")
+        print("Starting pairing mode... waiting  {} seconds".format(int(timeout)))
+        self.stick.pair(timeout=timeout)
+        time.sleep(args.pairtime + 0.5)
+        self.stick.sync_devices()
+        print("Pairing done, Config file updated.")
+
+    @splitargs
+    @ids_for_names
+    def do_up(self, blinds):
+        """
+        Usage:
+          up <SHUTTER> [<SHUTTER> <SHUTTER>]
+          
+        Lift one or several shutters. Accepts a list of shutter names sepatated by space.
+        
+        Example:
+            duofern> up Livingroom
+            duofern> up Livingroom Kitchen
+        """
+        for blind_id in blinds:
+            print("lifting {}".format(blinds[blind_id]))
+            self.stick.command(blind_id, "up")
+
+    @splitargs
+    @ids_for_names
+    def do_down(self, blinds):
+        """
+        Usage:
+          up <SHUTTER> [<SHUTTER> <SHUTTER>...]
+
+        Lower one or several shutters. Accepts a list of shutter names sepatated by space.
+
+        Example:
+            duofern> up Livingroom
+            duofern> up Livingroom Kitchen
+        """
+        for blind_id in blinds:
+            print("lowering {}".format(blinds[blind_id]))
+            self.stick.command(blind_id, "down")
+
+    @splitargs
+    def do_rename(self, args):
+        """
+        Usage:
+          rename <NAME> <NEW_NAME>
+        
+        Rename an actor. Write changes to config file when done.
+        
+        Example:
+            duofern> rename 13f897 kitchen_west
+        """
+        id = [device['id'] for device in self.stick.config['devices'] if device['name'] == args[0]]
+        if len(id)==0:
+            print("Please enter a valid device name for renaming.")
+        self.stick.set_name(id[0], args[1])
+        print("Set name for {} to {}".format(id[0], args[0]))
+
+    def refresh(self,args):
+        """
+        Usage:
+          refresh
+        
+        Refresh config file with current changes. 
+        
+        example:
+            duofern> refresh
+        """
+        self.stick.sync_devices()
+
+    @splitargs
+    @ids_for_names
+    def do_on(self, blinds):
+        """
+        Usage:
+          off <SWITCH1> [<SWITCH2> <SWITCH3>]
+
+        Switch on one or several switch actors. Accepts a list of actor names.
+
+        Example:
+            duofern> off Livingroom
+            duofern> off Livingroom Kitchen
+        """
+        for blind_id in blinds:
+            print("lifting {}".format(blinds[blind_id]))
+            self.stick.command(blind_id, "up")
+
+    @splitargs
+    @ids_for_names
+    def do_off(self, blinds):
+        """
+        Usage:
+          off <SWITCH1> [<SWITCH2> <SWITCH3>]
+
+        Switch off one or several switch actors. Accepts a list of actor names.
+
+        Example:
+            duofern> off Livingroom
+            duofern> off Livingroom Kitchen
+        """
+        for blind_id in blinds:
+            print("lifting {}".format(blinds[blind_id]))
+            self.stick.command(blind_id, "up")
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
+
+    print(args.up)
     if args.debug:
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
     else:

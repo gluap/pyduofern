@@ -43,7 +43,7 @@ Getting Started
 To install the python module run ``python setup.py install`` if you downloaded
 the sources already or use the convenience mechanism and run::
 
-     pip3 install https://github.com/gluap/pyduofern.git
+     pip3 install git+https://github.com/gluap/pyduofern.git
 
 udev configuration
 ==================
@@ -64,7 +64,8 @@ As you can se for me the serial is ``WR04ZFP4``. Use the following udev line (us
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="WR04ZFP4", SYMLINK+="duofernstick"
 
 Once the rule is deployed your stick should show up as ``/dev/duofernstick`` as soon as you plug it in. This
-helps avoid confusion if you use other usb-serial devices.
+helps avoid confusion if you use other usb-serial devices. Also be warned: The line also makes the stick
+accessible to non-root users. But likely on your system you will be the only user anyhow.
 
 Getting Started
 ===============
