@@ -21,7 +21,6 @@ import argparse
 import logging
 import re
 import time
-
 from cmd import Cmd
 
 from pyduofern.duofern_stick import DuofernStickThreaded
@@ -224,11 +223,11 @@ class DuofernCLI(Cmd):
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    print(args.up)
+    # print(args.up)
     if args.debug:
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='    %(asctime)s: %(message)s', level=logging.DEBUG)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+        logging.basicConfig(format='    %(asctime)s: %(message)s', level=logging.INFO)
 
     if args.code is not None:
         assert len(args.code) == 4, "System code must be a 4 digit hex code"
@@ -246,10 +245,10 @@ if __name__ == "__main__":
         stick.set_name(args.set_name[0], args.set_name[1])
         stick.sync_devices()
 
-    print("The following devices are configured:")
-
+    print("\nThe following devices are configured:\n")
     print("\n".join(
         ["id: {:6}    name: {}".format(device['id'], device['name']) for device in stick.config['devices']]))
+    print("\n")
 
     if args.pair:
         print("entering pairing mode")

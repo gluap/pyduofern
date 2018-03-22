@@ -355,7 +355,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         yield from self.send(duoACK)
         yield from send_and_await_reply(self, duoInit3, "init 3")
         yield from self.send(duoACK)
-        logger.info(self.config)
+        # logger.info(self.config)
         if "devices" in self.config:
             counter = 0
             for device in self.config['devices']:
@@ -430,7 +430,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             except DuofernTimeoutException:
                 continue
             self._simple_write(duoACK)
-            logger.info(self.config)
+            #logger.info(self.config)
             if "devices" in self.config:
                 counter = 0
                 for device in self.config['devices']:
@@ -488,15 +488,15 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         self.serial_connection.write(data_to_write)
 
     def command(self, *args):
-        logger.info("sending command")
-        logger.info(args)
+        logger.info("sending command: {}".format(" ".join(args)))
         list(self.duofern_parser.set(*args))
 
+    @asyncio.coroutine
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
-        logger.info("sending {}".format(message))
-        self.send(message)
-        logger.info("added {} to write queue".format(message))
+        logger.debug("sending {}".format(message))
+        yield self.send(message)
+        logger.debug("added {} to write queue".format(message))
 
     def run(self):
         self.running = True
@@ -505,7 +505,10 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.timeout = .05
             if not self.serial_connection.isOpen():
                 self.serial_connection.open()
-            in_data = hex(self.serial_connection.read(22))
+            try:
+                in_data = hex(self.serial_connection.read(22))
+            except TypeError:
+                pass
             if len(in_data) == 44:
                 if in_data != duoACK:
                     self._simple_write(duoACK)
@@ -530,9 +533,10 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         threading.Timer(timeout, self.stop_unpair).start()
 
     def send(self, msg):
-        logger.info("sending {}".format(msg))
+        logger.debug("sending {}".format(msg))
         self.write_queue.append(msg)
-        logger.info("added {} to write queueue".format(msg))
+        logger.debug("added {} to write queueue".format(msg))
+        return
 
 
 if __name__ == '__main__':

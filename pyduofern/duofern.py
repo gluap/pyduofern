@@ -58,7 +58,7 @@ def merge_dicts(*dict_args):
 
 
 def DoTrigger(*args):
-    logger.info("called DoTrigger({})".format(args))
+    logger.debug("called DoTrigger({})".format(args))
 
 
 def readingsBulkUpdate(*args):
@@ -97,7 +97,7 @@ class Duofern(object):
     def add_device(self, code, name=None):
         if name is None:
             name = len(self.modules['by_code'])
-        logger.info("adding {}".format(code))
+        logger.debug("adding {}".format(code))
         self.modules['by_code'][code] = {'name': name}
 
     def update_state(self, code, key, value, trigger=None):
@@ -119,7 +119,7 @@ class Duofern(object):
             module_definition = self.modules['by_code'][code]
         except KeyError:
             self.add_device(code)
-            logger.info(code)
+            logger.info("detected unknown device, ID={}".format(code))
             module_definition = self.modules['by_code'][code]
 
         module_definition01 = None
@@ -141,7 +141,7 @@ class Duofern(object):
         if msg[0:4] == "0602":
             self.update_state(code, "state", "paired", "1")
             # del hash['READINGS']['unpaired']
-            logger.info("DUOFERN device paired, code {}".format(code))
+            logger.info("DUOFERN device paired, ID {}".format(code))
 
         # Device unpaired
         elif (msg[0:4] == "0603"):
@@ -707,7 +707,7 @@ class Duofern(object):
         if (blindsMode == "on"):
             sets = merge_dicts(sets, setsBlinds)
 
-        logger.info(sets.keys())  # join(" ", sort keys sets)
+        logger.debug(sets.keys())  # join(" ", sort keys sets)
         if cmd in commandsStatus:
             buf = duoStatusRequest
             buf = buf.replace("nn", commandsStatus[cmd])
@@ -907,7 +907,7 @@ class Duofern(object):
             # return undef
 
         elif cmd in commands:
-            logger.info("command in commands")
+            logger.info("command valid")
             subCmd = None
             chanNo = "01"
             argV = "00"
@@ -1048,7 +1048,7 @@ class Duofern(object):
             buf = buf.replace("tt", timer)
             buf = buf.replace("wwww", argW)
             buf = buf.replace("cc", chanNo)
-            logger.info("trying to send {}".format(buf))
+            logger.debug("trying to send {}".format(buf))
             yield from self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
