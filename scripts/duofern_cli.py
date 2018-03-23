@@ -240,7 +240,7 @@ if __name__ == "__main__":
     stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code, config_file_json=args.configfile)
 
     if args.set_name is not None:
-        assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name, re.IGNORECASE), \
+        assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name[0], re.IGNORECASE), \
             "id for renaming must be a valid 6 digit hex ID not {}".format(args.set_name[0])
         stick.set_name(args.set_name[0], args.set_name[1])
         stick.sync_devices()
@@ -329,4 +329,7 @@ if __name__ == "__main__":
 
     stick.stop()
     time.sleep(1)
-    stick.join()
+    try:
+        stick.join()
+    except RuntimeError:
+        pass
