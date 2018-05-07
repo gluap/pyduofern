@@ -40,7 +40,7 @@ logger = logging.getLogger(__file__)
 
 
 duoStatusRequest = "0DFFnn400000000000000000000000000000yyyyyy01"
-duoCommand = "0Dccnnnnnnnnnnnnnnnnnnnn000000zzzzzzyyyyyy00"
+duoCommand = "0Dkknnnnnnnnnnnnnnnnnnnn000000zzzzzzyyyyyy00"
 duoWeatherConfig = "0D001B400000000000000000000000000000yyyyyy00"
 duoWeatherWriteConfig = "0DFF1Brrnnnnnnnnnnnnnnnnnnnn00000000yyyyyy00"
 duoSetTime = "0D0110800001mmmmmmmmnnnnnn0000000000yyyyyy00"
@@ -1047,7 +1047,7 @@ class Duofern(object):
             buf = buf.replace("nn", argV)
             buf = buf.replace("tt", timer)
             buf = buf.replace("wwww", argW)
-            buf = buf.replace("cc", chanNo)
+            buf = buf.replace("kk", chanNo)
             logger.debug("trying to send {}".format(buf))
             yield from self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
