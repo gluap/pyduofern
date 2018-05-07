@@ -67,9 +67,13 @@ class DuofernLight(Light):
 
     def turn_on(self):
         self._stick.command(self._id, "on")
+        # this is a hotfix because currently the state is not correctly detected from duofern
+        self._stick.duofern_parser.modules['by_code'][self._id]['state'] = "on"
 
     def turn_off(self):
         self._stick.command(self._id, "off")
+        # this is a hotfix because currently the state is not correctly detected from duofern
+        self._stick.duofern_parser.modules['by_code'][self._id]['state'] = 0
 
     def update(self):
         pass
