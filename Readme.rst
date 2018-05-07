@@ -45,6 +45,11 @@ the sources already or use the convenience mechanism and run::
 
      pip3 install git+https://github.com/gluap/pyduofern.git
 
+
+or if you previously installed the package::
+
+     pip3 install --ugprade git+https://github.com/gluap/pyduofern.git
+
 udev configuration
 ==================
 to make your usb stick easy to identify deploy an `udev rules <https://wiki.debian.org/udev>`_ file in
