@@ -21,7 +21,7 @@ License::
    apart from some comments to facilitate translation of the not-yet
    translated parts of the original software. Modification dates are
    documented as submits to the git repository of this code, currently
-   maintained at `https://bitbucket.org/gluap/pyduofern.git <https://bitbucket.org/gluap/pyduofern.git>`_
+   maintained at `https://github.com/gluap/pyduofern.git <https://github.com/gluap/pyduofern.git>`_
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
