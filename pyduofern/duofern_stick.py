@@ -488,7 +488,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         self.serial_connection.write(data_to_write)
 
     def command(self, *args):
-        logger.info("sending command: {}".format(" ".join(args)))
+        logger.info("sending command: {}".format(" ".join([str(arg) for arg in args])))
         list(self.duofern_parser.set(*args))
 
     @asyncio.coroutine
