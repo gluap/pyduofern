@@ -1,5 +1,7 @@
 pyduofern
 =========
+.. image:: https://travis-ci.org/gluap/pyduofern.svg?branch=master
+    :target: https://travis-ci.org/gluap/pyduofern
 
 These are my efforts in porting the `FHEM <http://fhem.de/fhem.html>`_
 `Duofern USB-Stick <https://wiki.fhem.de/wiki/DUOFERN>`_ based module to
