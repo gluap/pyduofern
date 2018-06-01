@@ -145,7 +145,8 @@ class DuofernStick(object):
                 os.makedirs(dir)
             record_filename = os.path.join(dir, str(time.time()))
         else:
-            record_filename = tempfile.mktemp()
+            record_filename = tempfile.mktemp(prefix="duofern_record_")
+            print("recording to  {}".format(record_filename))
         self.recorder = open(record_filename, 'w')
 
     def _initialize(self, **kwargs):
@@ -324,7 +325,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.buffer += bytearray(data)
         while len(self.buffer) >= 22:
             if self.recording:
-                self.recorder.write("received {}".format(hex(self.buffer[0:22])))
+                self.recorder.write("received {}\n".format(hex(self.buffer[0:22])))
+                self.recorder.flush()
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
@@ -347,7 +349,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         """ Feed a message to the sender coroutine. """
         tosend = bytearray.fromhex(data)
         if self.recording:
-            self.recorder.write("sent {}".format(data))
+            self.recorder.write("sent {}\n".format(data))
+            self.recorder.flush()
         yield from self.write_queue.put(tosend)
 
     @asyncio.coroutine
@@ -392,6 +395,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         yield from send_and_await_reply(self, duoStatusRequest, "duoInitEnd")
         yield from self.send(duoACK)
         self.available.set_result(True)
+        self.initialized = True
 
 
 class DuofernStickThreaded(DuofernStick, threading.Thread):
@@ -422,7 +426,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         logger.debug("response {}".format(hex(response)))
 
         if self.recording:
-            self.recorder.write("read {}".format(hex(response)))
+            self.recorder.write("received {}\n".format(hex(response)))
+            self.recorder.flush()
 
         return hex(response)
 
@@ -508,7 +513,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         logger.debug("writing  {}".format(string_to_write))
         hex_to_write = string_to_write.replace(" ", '')
         if self.recording:
-            self.recorder.write("sent {}".format(hex_to_write))
+            self.recorder.write("sent {}\n".format(hex_to_write))
+            self.recorder.flush()
         data_to_write = bytearray.fromhex(hex_to_write)
         if not self.serial_connection.isOpen():
             self.serial_connection.open()
@@ -562,7 +568,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     def send(self, msg, **kwargs):
         logger.debug("sending {}".format(msg))
         if self.recording:
-            self.recorder.write("sent {}".format(msg))
+            self.recorder.write("sent {}\n".format(msg))
+            self.recorder.flush()
         self.write_queue.append(msg)
         logger.debug("added {} to write queue".format(msg))
         return

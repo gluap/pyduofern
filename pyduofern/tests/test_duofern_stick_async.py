@@ -53,7 +53,7 @@ class TransportMock:
     def write(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
         if data != bytearray.fromhex(pyduofern.duofern_stick.duoACK):
-            self.proto.callback(pyduofern.duofern_stick.duoACK)
+            self.proto.data_received(bytearray.fromhex(pyduofern.duofern_stick.duoACK))
         self.proto._ready.set()
 
 

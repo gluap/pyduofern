@@ -67,3 +67,10 @@ class TestInitialize(unittest.TestCase):
         test.start()
         time.sleep(0.1)
         test.stop()
+
+    def test_init_recording(self):
+        test = self.df.DuofernStickThreaded(serial_port="bla", system_code="ffff", config_file_json=tempfile.mktemp(),
+                                            recording=True)
+        test.serial_connection = Mock()
+        test.serial_connection.read = read_mock
+        test._initialize()
