@@ -355,8 +355,7 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
         yield from self.send(duoACK)
         yield from send_and_await_reply(self, duoInit3, "init 3")
         yield from self.send(duoACK)
-        # logger.info(self.config)
-        if "devices" in self.config:
+        if 'devices' in self.config and self.config['devices']:
             counter = 0
             for device in self.config['devices']:
                 hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
