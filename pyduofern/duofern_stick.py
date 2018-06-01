@@ -536,32 +536,3 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         self.write_queue.append(msg)
         logger.debug("added {} to write queueue".format(msg))
         return
-
-
-if __name__ == '__main__':
-    formatter = logging.Formatter('%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s')
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-
-    test = DuofernStickThreaded(system_code="affe")
-    test._initialize()
-    test.start()
-    try:
-        time.sleep(1)
-        test.pair()
-        time.sleep(1)
-        test.unpair()
-        time.sleep(1)
-        test.test_callback("argarg")
-        for j in range(0, 500):
-            try:
-                logger.info("waiting")
-                time.sleep(1)
-            except DuofernTimeoutException:
-                pass
-    except KeyboardInterrupt:
-        test.stop()
-        time.sleep(0.1)
-        test.join()
