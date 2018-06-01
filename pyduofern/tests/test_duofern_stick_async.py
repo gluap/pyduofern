@@ -26,52 +26,50 @@
 import asyncio
 import logging
 
+import pytest
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-from unittest.mock import Mock
 import pyduofern.duofern_stick  # import DuofernStickAsync
 
-logging.basicConfig(level=logging.DEBUG)
-loop = asyncio.get_event_loop()
 
-# coro = serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(loop), '/dev/ttyUSB0', baudrate=115200)
-# f, proto = loop.run_until_complete(coro)
-# proto.handshake()
+@pytest.fixture
+def looproto():
+    loop = asyncio.get_event_loop()
 
-proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff")
+    # coro = serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(loop), '/dev/ttyUSB0', baudrate=115200)
+    # f, proto = loop.run_until_complete(coro)
+    # proto.handshake()
+
+    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff")
+    return loop, proto
 
 
+class TransportMock:
+    def __init__(self, proto):
+        super(TransportMock).__init__()
+        self.proto = proto
 
-class TransportMock(Mock):
     def write(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
-
-def one_time_callback(protocol, _message, name, future):
-    logger.info("{} answer for {}".format(_message, name))
-    if not future.cancelled():
-        future.set_result(_message)
-        protocol.callback = None
-
-@asyncio.coroutine
-def send_and_await_reply(protocol, message, message_identifier):
-    future = asyncio.Future()
-    protocol.transport.write = lambda message: one_time_callback(protocol, message, message_identifier, future)
-    try:
-        result = yield from future
-        
-    except asyncio.CancelledError:
-        logger.info("future was cancelled waiting for reply")
+        if data != bytearray.fromhex(pyduofern.duofern_stick.duoACK):
+            self.proto.callback(pyduofern.duofern_stick.duoACK)
+        self.proto._ready.set()
 
 
-def test_init_against_mocked_stick():
-    proto.transport = TransportMock()
+def test_init_against_mocked_stick(looproto):
+    loop, proto = looproto
+    proto.transport = TransportMock(proto)
     proto._ready = asyncio.Event()
-    # proto.transport.write = mock_write
+
     initialization = asyncio.async(proto.handshake())
+
     proto._ready.set()
 
     def cb(a):
         logging.info(a)
 
     proto.available.add_done_callback(cb)
+
+    loop.run_until_complete(initialization)
