@@ -29,6 +29,7 @@ import json
 import logging
 import os
 import os.path
+import tempfile
 import threading
 import time
 
@@ -73,7 +74,7 @@ def refresh_serial_connection(function):
 
 
 class DuofernStick(object):
-    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, *args, **kwargs):
+    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, recording=None, *args, **kwargs):
         """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
@@ -119,7 +120,6 @@ class DuofernStick(object):
         else:
             raise DuofernException("No system code specified. Since the system code is a security feature no default"
                                    "can be provided. Please re-run wiht a valid system code {}".format(self.config))
-
         assert len(self.system_code) == 4, "system code (serial) must be a string of 4 hexadecimal numbers"
 
         self.pairing = False
@@ -130,13 +130,31 @@ class DuofernStick(object):
         self._dump_config()
         self.initialized = False
 
+        if recording is None and 'recording' in self.config:
+            recording = bool(self.config['recording'])
+
+        self.recording = recording
+        if recording:
+            self._initialize_recording()
+
+    def _initialize_recording(self):
+        if 'recording_dir' in self.config:
+            dir = self.config['recording_dir']
+            assert not os.path.isfile(dir), 'must pass existing or creatable dir as `recording_dir` in config'
+            if not os.path.isdir(dir):
+                os.makedirs(dir)
+            record_filename = os.path.join(dir, str(time.time()))
+        else:
+            record_filename = tempfile.mktemp()
+        self.recorder = open(record_filename, 'w')
+
     def _initialize(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
     def _simple_write(self, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
-    def send(self, **kwargs):
+    def send(self, msg, **kwargs):
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
     def _dump_config(self):
@@ -305,6 +323,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.last_packet = time.time()
         self.buffer += bytearray(data)
         while len(self.buffer) >= 22:
+            if self.recording:
+                self.recorder.write("received {}".format(hex(self.buffer[0:22])))
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
@@ -323,9 +343,11 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         logger.info(packet)
 
     @asyncio.coroutine
-    def send(self, data):
+    def send(self, data, **kwargs):
         """ Feed a message to the sender coroutine. """
         tosend = bytearray.fromhex(data)
+        if self.recording:
+            self.recorder.write("sent {}".format(data))
         yield from self.write_queue.put(tosend)
 
     @asyncio.coroutine
@@ -395,10 +417,13 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         logger.debug("should read {}".format(some_string))
         self.serial_connection.timeout = 1
         response = bytearray(self.serial_connection.read(22))
-
         if len(response) < 22:
             raise DuofernTimeoutException
         logger.debug("response {}".format(hex(response)))
+
+        if self.recording:
+            self.recorder.write("read {}".format(hex(response)))
+
         return hex(response)
 
     def _initialize(self):  # DoInit
@@ -430,7 +455,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             except DuofernTimeoutException:
                 continue
             self._simple_write(duoACK)
-            #logger.info(self.config)
+
             if "devices" in self.config:
                 counter = 0
                 for device in self.config['devices']:
@@ -482,6 +507,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         """Just write data"""
         logger.debug("writing  {}".format(string_to_write))
         hex_to_write = string_to_write.replace(" ", '')
+        if self.recording:
+            self.recorder.write("sent {}".format(hex_to_write))
         data_to_write = bytearray.fromhex(hex_to_write)
         if not self.serial_connection.isOpen():
             self.serial_connection.open()
@@ -532,8 +559,10 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         super(DuofernStickThreaded, self).unpair(timeout)
         threading.Timer(timeout, self.stop_unpair).start()
 
-    def send(self, msg):
+    def send(self, msg, **kwargs):
         logger.debug("sending {}".format(msg))
+        if self.recording:
+            self.recorder.write("sent {}".format(msg))
         self.write_queue.append(msg)
-        logger.debug("added {} to write queueue".format(msg))
+        logger.debug("added {} to write queue".format(msg))
         return

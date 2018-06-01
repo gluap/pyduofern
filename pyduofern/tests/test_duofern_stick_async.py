@@ -35,15 +35,12 @@ logger.setLevel(logging.INFO)
 import pyduofern.duofern_stick  # import DuofernStickAsync
 
 
-@pytest.fixture
-def looproto():
+@pytest.fixture(scope="function", params=[True, False])
+def looproto(request):
     loop = asyncio.get_event_loop()
 
-    # coro = serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(loop), '/dev/ttyUSB0', baudrate=115200)
-    # f, proto = loop.run_until_complete(coro)
-    # proto.handshake()
-
-    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff", config_file_json=tempfile.mktemp())
+    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff", config_file_json=tempfile.mktemp(),
+                                                      recording=request.param)
     return loop, proto
 
 
