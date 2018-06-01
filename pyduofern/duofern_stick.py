@@ -257,8 +257,8 @@ def send_and_await_reply(protocol, message, message_identifier):
 
 
 class DuofernStickAsync(asyncio.Protocol, DuofernStick):
-    def __init__(self, loop=None):
-        super(DuofernStickAsync, self).__init__()
+    def __init__(self, loop=None, *args, **kwargs):
+        super(DuofernStickAsync, self).__init__(*args, **kwargs)
         self.duofern_parser.asyncio = True
         self.initialization_step = 0
         self.loop = loop
