@@ -25,6 +25,7 @@
 
 import asyncio
 import logging
+import tempfile
 
 import pytest
 
@@ -42,7 +43,7 @@ def looproto():
     # f, proto = loop.run_until_complete(coro)
     # proto.handshake()
 
-    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff")
+    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff", config_file_json=tempfile.mktemp())
     return loop, proto
 
 

@@ -24,6 +24,7 @@
 #   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 import logging
+import tempfile
 import time
 import unittest
 
@@ -53,13 +54,13 @@ class TestInitialize(unittest.TestCase):
         # self.df.serial.Serial.read = read_mock
 
     def test_init(self):
-        test = self.df.DuofernStickThreaded(serial_port="bla")
+        test = self.df.DuofernStickThreaded(serial_port="bla", system_code="ffff", config_file_json=tempfile.mktemp())
         test.serial_connection = Mock()
         test.serial_connection.read = read_mock
         test._initialize()
 
     def test_run(self):
-        test = self.df.DuofernStickThreaded(serial_port="bla")
+        test = self.df.DuofernStickThreaded(serial_port="bla", system_code="ffff", config_file_json=tempfile.mktemp())
         test.serial_connection = Mock()
         test.serial_connection.read = read_mock
         test._initialize()

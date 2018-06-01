@@ -73,7 +73,7 @@ def refresh_serial_connection(function):
 
 
 class DuofernStick(object):
-    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None):
+    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, *args, **kwargs):
         """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
@@ -81,7 +81,7 @@ class DuofernStick(object):
         :param duofern_parser: parser object. Unless you hacked your own one just leave None and it
          defaults to pyduofern.duofern.Duofern()
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
         if config_file_json is None:
             config_file_json = os.path.expanduser("~/.duofern.json")
 
@@ -256,7 +256,7 @@ def send_and_await_reply(protocol, message, message_identifier):
         logger.info("future was cancelled waiting for reply")
 
 
-class DuofernStickAsync(asyncio.Protocol, DuofernStick):
+class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     def __init__(self, loop=None, *args, **kwargs):
         super(DuofernStickAsync, self).__init__(*args, **kwargs)
         self.duofern_parser.asyncio = True
