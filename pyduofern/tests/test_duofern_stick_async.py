@@ -27,6 +27,7 @@ import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 from unittest.mock import Mock
 import pyduofern.duofern_stick  # import DuofernStickAsync

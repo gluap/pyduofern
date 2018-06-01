@@ -145,7 +145,7 @@ class DuofernStick(object):
 
     def process_message(self, message):
         if message[0:2] == '81':
-            logger.debug("got Acknowledged")
+            #            logger.debug("got Acknowledged")
             # return
             self.handle_write_queue()
             return ()
