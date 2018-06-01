@@ -72,3 +72,6 @@ def test_init_against_mocked_stick(looproto):
     proto.available.add_done_callback(cb)
 
     loop.run_until_complete(initialization)
+
+    for task in asyncio.Task.all_tasks():
+        task.cancel()
