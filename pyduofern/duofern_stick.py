@@ -66,7 +66,7 @@ def refresh_serial_connection(function):
         self = args[0]
         if self.serial_connection.isOpen():
             return function(*args, **kwargs)
-        else:
+        else:  # pragma: no cover
             self.serial_connection.open()
             return function(*args, **kwargs)
 
@@ -83,14 +83,14 @@ class DuofernStick(object):
          defaults to pyduofern.duofern.Duofern()
         """
         super().__init__(*args, **kwargs)
-        if config_file_json is None:
+        if config_file_json is None:  # pragma: no cover
             config_file_json = os.path.expanduser("~/.duofern.json")
 
         if os.path.isfile(config_file_json):
             try:
                 with open(config_file_json, "r") as config_file_fh:
                     self.config = json.load(config_file_fh)
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError:  # pragma: no cover
                 self.config = {'devices': []}
                 logger.info('failed reading config')
         else:
@@ -98,8 +98,9 @@ class DuofernStick(object):
             self.config = {'devices': []}
 
         if duofern_parser is None:
-            self.duofern_parser = Duofern(send_hook=self.add_serial_and_send)
+            duofern_parser = Duofern(send_hook=self.add_serial_and_send)
 
+        self.duofern_parser = duofern_parser
         self.running = False
         self.pairing = False
         self.unpairing = False
@@ -115,7 +116,7 @@ class DuofernStick(object):
                                                                         os.path.abspath(config_file_json))
 
             self.system_code = system_code
-        elif 'system_code' in self.config:
+        elif 'system_code' in self.config:  # pragma: no cover
             self.system_code = self.config['system_code']
         else:
             raise DuofernException("No system code specified. Since the system code is a security feature no default"
@@ -143,7 +144,7 @@ class DuofernStick(object):
             assert not os.path.isfile(dir), 'must pass existing or creatable dir as `recording_dir` in config'
             if not os.path.isdir(dir):
                 os.makedirs(dir)
-            record_filename = os.path.join(dir, str(time.time()))
+            record_filename = os.path.join(dir, "duofern_record_{}".format(str(time.time())))
         else:
             record_filename = tempfile.mktemp(prefix="duofern_record_")
             print("recording to  {}".format(record_filename))
