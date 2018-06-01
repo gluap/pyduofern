@@ -50,6 +50,7 @@ class TransportMock:
     def __init__(self, proto):
         super(TransportMock).__init__()
         self.proto = proto
+        self.unittesting = True
 
     def write(self, data):
         logger.warning("writing {} detected by mock writer".format(data))

@@ -347,8 +347,9 @@ class DuofernStickAsync(asyncio.Protocol, DuofernStick):
 
     @asyncio.coroutine
     def handshake(self):
-        yield from asyncio.sleep(2)
-        logger.info("now handshaking")
+        if not hasattr(self.transport, 'unittesting'):
+            yield from asyncio.sleep(2)
+            logger.info("now handshaking")
         yield from send_and_await_reply(self, duoInit1, "init 1")
         yield from send_and_await_reply(self, duoInit2, "init 2")
         yield from send_and_await_reply(self, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
