@@ -3,7 +3,7 @@ language: python
 python:
   - "3.5"
   - "3.6"
-install: pip install tox-travis coveralls
+install: pip install tox-travis coveralls pyserial-asyncio
 script:
   - tox
   - coverage run --source pyduofern -m py.test
