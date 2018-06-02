@@ -67,6 +67,7 @@ class TransportMock:
     def readin(cls, replayfile):
         f = open(replayfile, 'r')
         lines = f.readlines()
+        lines = ["!" + l for l in lines if l[0] != "?"]
         actions = [l.split(" ") for l in lines]
         actions.reverse()
         return actions
@@ -76,15 +77,16 @@ class TransportMock:
 
     def next_is_received(self):
         if not self.replay: return False
-        return self.replay[-1][0] != "sent"
+        return self.replay[-1][0][1:] != "sent"
+
+    def next_optional(self):
+        return self.replay[-1][0][0] == "?"
 
     def write(self, data):
-        logger.warning("writing {} detected by mock writer".format(data))
-        if self.next_is_received():
-            self.finished_actions.append("recording states next command was send but we received something")
-        line = self.next_line()[1]
-        if bytearray.fromhex(line.strip()) != data:
-            self.finished_actions.append("\nrecording states we sent {} but we are sending {}".format(line, hex(data)))
+        optional = self.next_optional()
+        result = self.check_if_next_matches(data)
+        if (result != "OK") and not optional:
+            self.finished_actions.append(result)
         else:
             self.finished_actions.append("OK")
         while self.next_is_received():
@@ -95,6 +97,17 @@ class TransportMock:
             except Exception:
                 self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")
             self.proto._ready.set()
+
+    def check_if_next_matches(self, data):
+        logger.warning("writing {} detected by mock writer".format(data))
+        msg = ""
+        if self.next_is_received():
+            msg += "recording states next command was send but we received something"
+        line = self.next_line()[1]
+        if bytearray.fromhex(line.strip()) != data:
+            return msg + "\nrecording states we sent {} but we are sending {}".format(line, hex(data))
+        else:
+            return "OK"
 
 
 @pytest.mark.parametrize('replayfile', list_replays())
