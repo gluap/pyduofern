@@ -25,12 +25,8 @@ setup(name='pyduofern',
       zip_safe=False,
       include_package_data=False,
 
-      test_suite='py.test',
-      setup_requires=[
-          'pytest-runner',
-      ],
       tests_require=[
-          'pytest',
+          'tox', 'pytest', 'pytest-asyncio'
       ],
 
       scripts=["scripts/duofern_cli.py"]
