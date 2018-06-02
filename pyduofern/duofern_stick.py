@@ -367,6 +367,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
             except asyncio.CancelledError:
                 logger.info("Got CancelledError, stopping send loop")
                 break
+            except Exception as exc:
+                raise
 
     def parse_regular(self, packet):
         logger.info(packet)

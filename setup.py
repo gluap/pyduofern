@@ -19,7 +19,7 @@ setup(name='pyduofern',
       packages=['pyduofern'],
 
       install_requires=[
-          'pyserial', 'pyserial-asyncio'
+          'pyserial', 'pyserial-asyncio', 'pytest-asyncio'
       ],
 
       zip_safe=False,
