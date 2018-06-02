@@ -38,7 +38,6 @@ from .exceptions import DuofernException
 
 logger = logging.getLogger(__file__)
 
-
 duoStatusRequest = "0DFFnn400000000000000000000000000000yyyyyy01"
 duoCommand = "0Dkknnnnnnnnnnnnnnnnnnnn000000zzzzzzyyyyyy00"
 duoWeatherConfig = "0D001B400000000000000000000000000000yyyyyy00"
@@ -86,12 +85,13 @@ def DUOFERN_DecodeWeatherSensorConfig(*args):
 
 
 class Duofern(object):
-    def __init__(self, send_hook=None, asyncio=False):
+    def __init__(self, send_hook=None, asyncio=False, recorder=None):
         self.asyncio = asyncio
         self.modules = {'by_code': {}}  # i guess this is supposed to be a hash of self.modules...
         self.ignore_devices = {}  # should replace attrValrel
         assert send_hook is not None, "Must define send callback"
         self.send_hook = send_hook
+        self.recorder = recorder
         pass
 
     def add_device(self, code, name=None):
@@ -619,7 +619,6 @@ class Duofern(object):
             # self.update_state(code, "regreg", "regVal", "1")
             DUOFERN_DecodeWeatherSensorConfig(hash)
 
-
             # Rauchmelder Batterie
         elif msg[0:8] == "0fff1323":
             battery = "low" if int(msg[8:8 + 2], 16) <= 10 else "ok"
@@ -667,6 +666,9 @@ class Duofern(object):
 
         #        me     = shift @a
         #        cmd    = shift @a
+        if self.recorder:
+            self.recorder.write("# dufern_set, {}, {}, {}\n".format(code, cmd, args))
+
         arg = args[0] if len(args) >= 1 else None
         arg2 = args[1] if len(args) > 1 else None
         code = code[0:0 + 6]
@@ -1018,7 +1020,6 @@ class Duofern(object):
                         cmd = "stop"
             # self.update_state(code,"moving","moving")
 
-
             if ((cmd == "toggle") and (position > -1)):
                 self.update_state(code, "moving", "moving", 1)
             if ((cmd == "dawn") and (dawnAutomatic == "on") and (position > 0)):
@@ -1052,7 +1053,6 @@ class Duofern(object):
             yield from self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
-
 
             return None
 
