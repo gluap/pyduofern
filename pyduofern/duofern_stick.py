@@ -150,13 +150,13 @@ class DuofernStick(object):
             print("recording to  {}".format(record_filename))
         self.recorder = open(record_filename, 'w')
 
-    def _initialize(self, **kwargs):
+    def _initialize(self, **kwargs):  # pragma: no cover
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
-    def _simple_write(self, **kwargs):
+    def _simple_write(self, **kwargs):  # pragma: no cover
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
-    def send(self, msg, **kwargs):
+    def send(self, msg, **kwargs):  # pragma: no cover
         raise NotImplementedError("need to use an implementation of the Duofernstick")
 
     def _dump_config(self):
@@ -334,11 +334,11 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
                 self.process_message(hex(self.buffer[0:22]))
             self.buffer = self.buffer[22:]
 
-    def pause_writing(self):
+    def pause_writing(self):  # pragma: no cover
         logger.info('pause writing')
         logger.info(self.transport.get_write_buffer_size())
 
-    def resume_writing(self):
+    def resume_writing(self):  # pragma: no cover
         logger.info(self.transport.get_write_buffer_size())
         logger.info('resume writing')
 
@@ -439,20 +439,20 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self._simple_write(duoInit1)
             try:
                 self._read_answer("INIT1")
-            except DuofernTimeoutException:
+            except DuofernTimeoutException:  # pragma: no cover
                 continue
 
             self._simple_write(duoInit2)
             try:
                 self._read_answer("INIT2")
-            except DuofernTimeoutException:
+            except DuofernTimeoutException:  # pragma: no cover
                 continue
 
             buf = duoSetDongle.replace("zzzzzz", "6f" + self.system_code)
             self._simple_write(buf)
             try:
                 self._read_answer("SetDongle")
-            except DuofernTimeoutException:
+            except DuofernTimeoutException:  # pragma: no cover
                 continue
 
             self._simple_write(duoACK)
@@ -460,7 +460,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             try:
                 self._read_answer("INIT3")
 
-            except DuofernTimeoutException:
+            except DuofernTimeoutException:  # pragma: no cover
                 continue
             self._simple_write(duoACK)
 
@@ -471,7 +471,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                     self._simple_write(hex_to_write)
                     try:
                         self._read_answer("SetPairs")
-                    except DuofernTimeoutException:
+                    except DuofernTimeoutException:  # pragma: no cover
                         continue
                     self._simple_write(duoACK)
                     counter += 1
@@ -492,15 +492,15 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
 
             self._simple_write(duoInitEnd)
             try:
-                self._read_answer("INIT3")
-            except DuofernTimeoutException:  # look @ original
+                self._read_answer("INIT3")  # look @ original?
+            except DuofernTimeoutException:  # pragma: no cover
                 return False
             self._simple_write(duoACK)
 
             self._simple_write(duoStatusRequest)
             try:
                 self._read_answer("statusRequest")
-            except DuofernTimeoutException:
+            except DuofernTimeoutException:  # pragma: no cover
                 continue
             self._simple_write(duoACK)
 
