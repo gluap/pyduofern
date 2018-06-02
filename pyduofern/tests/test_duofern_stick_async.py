@@ -93,7 +93,6 @@ def test_raises_when_run_without_code():
 
     with pytest.raises(DuofernException):
         proto = pyduofern.duofern_stick.DuofernStickAsync(loop, config_file_json=tempfile.mktemp(), recording=False)
-        pass
 
 
 def test_raises_when_run_with_wrong_code():
@@ -105,7 +104,6 @@ def test_raises_when_run_with_wrong_code():
                                                               os.path.abspath(os.path.dirname(__file__)), 'files',
                                                               'duofern.json'),
                                                           recording=False, system_code="faaf")
-        pass
 
 
 def test_raises_when_run_with_long_code():
@@ -115,4 +113,3 @@ def test_raises_when_run_with_long_code():
         proto = pyduofern.duofern_stick.DuofernStickAsync(loop,
                                                           config_file_json=tempfile.mktemp(),
                                                           recording=False, system_code="faaaf")
-        pass
