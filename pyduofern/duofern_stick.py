@@ -164,6 +164,9 @@ class DuofernStick(object):
             json.dump(self.config, config_fh, indent=4)
 
     def process_message(self, message):
+        if self.recording:
+            self.recorder.write("received {}\n".format(message))
+            self.recorder.flush()
         if message[0:2] == '81':
             #            logger.debug("got Acknowledged")
             # return
@@ -300,8 +303,9 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
 
     @asyncio.coroutine
     def command(self, *args):
-        logger.info("sending command")
-        logger.info(args)
+        if self.recording:
+            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.flush()
         yield from self.duofern_parser.set(*args)
 
     @asyncio.coroutine
@@ -524,7 +528,9 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         self.serial_connection.write(data_to_write)
 
     def command(self, *args):
-        logger.info("sending command: {}".format(" ".join([str(arg) for arg in args])))
+        if self.recording:
+            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.flush()
         list(self.duofern_parser.set(*args))
 
     @asyncio.coroutine
