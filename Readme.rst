@@ -157,3 +157,16 @@ I just translated them into python and did not explore what might be possible.
 It looks like a lot of functionality requires a weather station, but you can just as
 easily automate the stuff using your home automation and having it send the up and down
 commands instead of buying a weather station.
+
+Changelog
+=========
+
+**0.22**
+- Added recording of actions for replay in integration tests
+- Improved unit tests
+- Enable travis
+- Enable coveralls
+
+**0.21.1**
+- fixed bug where device IDs containing `cc` would be be messed up when inserting channel number.
+
