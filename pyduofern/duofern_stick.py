@@ -170,8 +170,8 @@ class DuofernStick(object):
         if message[0:2] == '81':
             #            logger.debug("got Acknowledged")
             # return
-            self.handle_write_queue()
-            return ()
+            # self.handle_write_queue()
+            return
         if message[0:4] == '0602':
             logger.info("got pairing reply")
             self.pairing = False
@@ -288,7 +288,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.write_queue = asyncio.Queue()
         self._ready = asyncio.Event()
         self.transport = None
-        self.buffer = None
+        self.buffer = bytearray(b'')
+
         self.last_packet = 0.0
         self.callback = None
 
@@ -324,7 +325,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self._ready.set()
 
     def data_received(self, data):
-        if self.last_packet + 0.05 < time.time():
+        if self.last_packet + 0.05 < time.time() and not hasattr(self.transport, 'unittesting'):
             self.buffer = bytearray(b'')
         self.last_packet = time.time()
         self.buffer += bytearray(data)
@@ -332,6 +333,8 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
             if self.recording:
                 self.recorder.write("received {}\n".format(hex(self.buffer[0:22])))
                 self.recorder.flush()
+            if not hex(self.buffer[0:22]) == duoACK:
+                self.send(duoACK)
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
