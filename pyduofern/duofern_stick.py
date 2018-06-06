@@ -309,7 +309,6 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
             self.recorder.flush()
         yield from self.duofern_parser.set(*args)
 
-    @asyncio.coroutine
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.info("sending {}".format(message))
@@ -334,7 +333,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
                 self.recorder.write("received {}\n".format(hex(self.buffer[0:22])))
                 self.recorder.flush()
             if not hex(self.buffer[0:22]) == duoACK:
-                self.send(duoACK)
+                list(self.send(duoACK))
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
@@ -579,9 +578,6 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
 
     def send(self, msg, **kwargs):
         logger.debug("sending {}".format(msg))
-        if self.recording:
-            self.recorder.write("sent {}\n".format(msg))
-            self.recorder.flush()
         self.write_queue.append(msg)
         logger.debug("added {} to write queue".format(msg))
         return

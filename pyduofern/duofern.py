@@ -23,6 +23,7 @@
 #   along with this program; if not, write to the Free Software Foundation,
 #   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
+import asyncio
 import logging
 import time
 
@@ -102,8 +103,9 @@ class Duofern(object):
     def update_state(self, code, key, value, trigger=None):
         self.modules['by_code'][code][key] = value
 
-    def delete_state(self, code, key, value):
-        del self.modules['by_code'][code][key]
+    def delete_state(self, code, key):
+        if key in self.modules['by_code'][code]:
+            del self.modules['by_code'][code][key]
 
     def parse(self, msg):
         code = msg[30:36]
@@ -654,9 +656,11 @@ class Duofern(object):
 
         return name
 
+    @asyncio.coroutine
     def send(self, cmd):
         yield from self.send_hook(cmd)
 
+    @asyncio.coroutine
     def set(self, code, cmd, *args):
         # my (hash, @a) = @_
         # b = @a
@@ -1049,8 +1053,6 @@ class Duofern(object):
             yield from self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
-
-            return None
 
         else:
             raise Exception("command {} not found".format(cmd))
