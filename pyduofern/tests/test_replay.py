@@ -81,10 +81,6 @@ class TransportMock:
         if not self.replay: return False
         return self.replay[-1][0][1:] == "received"
 
-    def next_is_sent(self):
-        if not self.replay: return False
-        return self.replay[-1][0][1:] == "sent"
-
     def next_is_action(self):
         if not self.replay: return False
         return self.replay[-1][0][1:] == "sending_command"
@@ -112,8 +108,8 @@ class TransportMock:
                 try:
                     yield self.proto.data_received(bytearray.fromhex(line))
                     self.finished_actions.append("OK")
-                except Exception as exc:
-                    self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")  # pragma: no
+                except Exception as exc:  # pragma: no cover
+                    self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")
                     logger.exception("", exc_info=True)
 
     @asyncio.coroutine
