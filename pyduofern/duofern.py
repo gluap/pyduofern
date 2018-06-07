@@ -100,6 +100,13 @@ class Duofern(object):
         logger.debug("adding {}".format(code))
         self.modules['by_code'][code] = {'name': name}
 
+    def del_device(self, code, name=None):
+        if name is None:
+            name = len(self.modules['by_code'])
+        logger.info("removing {}".format(code))
+        if code in self.modules['by_code']:
+            del self.modules['by_code'][code]
+
     def update_state(self, code, key, value, trigger=None):
         self.modules['by_code'][code][key] = value
 
@@ -149,7 +156,8 @@ class Duofern(object):
             readingsBeginUpdate(hash)
             self.update_state(code, "unpaired", 1, "1")
             self.update_state(code, "state", "unpaired", "1")
-            readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
+            self.del_device(code)
+            # readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
             logger.warning("DUOFERN device unpaired, code {}".format(code))
 
         # Status Nachricht Aktor
