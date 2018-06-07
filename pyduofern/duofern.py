@@ -28,7 +28,6 @@ import logging
 import time
 
 from .definitions import *
-from .exceptions import DuofernException
 
 # regexe for replacing:
 # hash->\{([^\}]+)\}\{([^\}]+)\}
@@ -100,6 +99,13 @@ class Duofern(object):
         logger.debug("adding {}".format(code))
         self.modules['by_code'][code] = {'name': name}
 
+    def del_device(self, code, name=None):
+        if name is None:
+            name = len(self.modules['by_code'])
+        logger.info("removing {}".format(code))
+        if code in self.modules['by_code']:
+            del self.modules['by_code'][code]
+
     def update_state(self, code, key, value, trigger=None):
         self.modules['by_code'][code][key] = value
 
@@ -126,11 +132,11 @@ class Duofern(object):
         module_definition01 = None
         module_definition02 = None
 
-        if not module_definition:
-            DoTrigger("global", "Undefined code {}".format(code))
-            # module_definition = self.modules['by_code']{code}
-            logger.warning("Undefined code {}".format(code))
-            raise DuofernException("Undefined code {}".format(code))
+        #        if not module_definition:
+        #            DoTrigger("global", "Undefined code {}".format(code))
+        #            # module_definition = self.modules['by_code']{code}
+        #            logger.warning("Undefined code {}".format(code))
+        #            raise DuofernException("Undefined code {}".format(code))
 
         hash = module_definition
         name = hash['name']
@@ -149,7 +155,8 @@ class Duofern(object):
             readingsBeginUpdate(hash)
             self.update_state(code, "unpaired", 1, "1")
             self.update_state(code, "state", "unpaired", "1")
-            readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
+            self.del_device(code)
+            # readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
             logger.warning("DUOFERN device unpaired, code {}".format(code))
 
         # Status Nachricht Aktor
@@ -162,16 +169,16 @@ class Duofern(object):
             # RemoveInternalTimer(hash)
             # del hash['helper']['timeout']
 
-            # Bewegungsmelder, Wettersensor, Mehrfachwandtaster
-            if code[0:2] in ("65", "69", "74"):
+            # Bewegungsmelder, Wettersensor, Mehrfachwandtaster not tested yet
+            if code[0:2] in ("65", "69", "74"):  # pragma: no cover
                 self.update_state(code, "state", "OK", "1")
                 module_definition01 = self.modules['by_code'][code + "01"]
                 if not module_definition01:
                     DoTrigger("global", "UNDEFINED DUOFERN_code_actor DUOFERN code01")
                     module_definition01 = self.modules['by_code'][code + "01"]
 
-            # Universalaktor
-            elif code[0:2] == "43":
+            # Universalaktor -- not tested yet
+            elif code[0:2] == "43":  # pragma: no cover
                 self.update_state(code, "state", "OK", "1")
                 module_definition01 = self.modules['by_code'][code + "01"]
                 if not module_definition01:
@@ -218,8 +225,8 @@ class Duofern(object):
                 self.update_state(code, "moving", "stop", "1")
                 readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
 
-            # Universal Aktor, Steckdosenaktor, Troll Comfort DuoFern (Lichtmodus)
-            elif format == "22":
+            # Universal Aktor, Steckdosenaktor, Troll Comfort DuoFern (Lichtmodus) not tested yet
+            elif format == "22":  # pragma: no cover
                 level = int(msg[22:22 + 2], 16) & 0x7F
                 modeChange = "on" if int(msg[22:22 + 2], 16) & 0x80 else "off"
                 sunMode = "on" if int(msg[14:14 + 2], 16) & 0x10 else "off"
@@ -333,7 +340,8 @@ class Duofern(object):
                 self.update_state(code, "reversal", reversal, "1")
                 self.update_state(code, "blindsMode", blindsMode, "1")
 
-                if blindsMode == "on":
+                # not tested yet
+                if blindsMode == "on":  # pragma: no cover
                     self.update_state(code, "tiltInSunPos", tiltInSunPos, "1")
                     self.update_state(code, "tiltInVentPos", tiltInVentPos, "1")
                     self.update_state(code, "tiltAfterMoveLevel", tiltAfterMoveLevel, "1")
@@ -353,8 +361,8 @@ class Duofern(object):
                 self.update_state(code, "moving", "stop", "1")
                 self.update_state(code, "state", state, "1")
                 readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
-            # Rohrmotor, SX5
-            elif format == "24":
+            # Rohrmotor, SX5  -- not tested yet
+            elif format == "24":  # pragma: no cover
 
                 pos = int(msg[22:22 + 2], 16) & 0x7F
                 reversal = "on" if int(msg[22:22 + 2], 16) & 0x80 else "off"
@@ -423,8 +431,8 @@ class Duofern(object):
 
                 readingsEndUpdate(hash, 1)
 
-                # Dimmaktor
-            elif format == "25":
+                # Dimmaktor -- not tested yet
+            elif format == "25":  # pragma: no cover
                 stairwellFunction = "on" if int(msg[10:10 + 4], 16) & 0x8000 else "off"
                 stairwellTime = (int(msg[10:10 + 4], 16) & 0x7FFF) / 10
                 timerAuto = "on" if int(msg[14:14 + 2], 16) & 0x01 else "off"
@@ -462,8 +470,8 @@ class Duofern(object):
                 self.update_state(code, "state", state, "1")
                 readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
 
-            # Thermostat
-            elif format == "27":
+            # Thermostat -- not tested yet
+            elif format == "27":  # pragma: no cover
                 temperature1 = "%0.1f" % (((int(msg[8:8 + 4], 16) & 0x07FF) - 400) / 10)
                 temperature2 = "%0.1f" % (((int(msg[12:12 + 4], 16) & 0x07FF) - 400) / 10)
                 tempThreshold1 = "%0.1f" % ((int(msg[16:16 + 2], 16) - 80) / 2)
@@ -501,7 +509,7 @@ class Duofern(object):
 
 
         # Wandtaster, Funksender UP, Handsender, Sensoren
-        elif msg[0:2] == "0f" and msg[4:6] in ['07', '0e']:
+        elif msg[0:2] == "0f" and msg[4:6] in ['07', '0e']:  # pragma: no cover
             id = msg[4:4 + 4]
 
             if id not in sensorMsg:
@@ -550,8 +558,8 @@ class Duofern(object):
 
 
 
-        # Umweltsensor Wetter
-        elif msg[0:8] == "0f011322":
+        # Umweltsensor Wetter -- not tested yet
+        elif msg[0:8] == "0f011322":  # pragma: no cover
             module_definition01 = self.modules['by_code'][code + "00"]
             if not module_definition01:
                 DoTrigger("global", "UNDEFINED DUOFERN_code_sensor DUOFERN code00")
@@ -583,7 +591,7 @@ class Duofern(object):
             readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
 
         # Umweltsensor Zeit
-        elif msg[0:8] == "0fff1020":
+        elif msg[0:8] == "0fff1020":  # pragma: no cover
             module_definition01 = self.modules['by_code'][code + "00"]
             if (not module_definition01):
                 DoTrigger("global", "UNDEFINED DUOFERN_code_sensor DUOFERN code00")
@@ -604,7 +612,7 @@ class Duofern(object):
             readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
 
         # Umweltsensor Konfiguration
-        elif msg[0:7] == "0fff1b2" and msg[7] in ["0", "1", "2", "3", "4", "5", "6", "7", "8"]:
+        elif msg[0:7] == "0fff1b2" and msg[7] in ["0", "1", "2", "3", "4", "5", "6", "7", "8"]:  # pragma: no cover
             reg = msg[6:6 + 2] - 21
             regVal = msg[8:8 + 20]
 
@@ -621,7 +629,7 @@ class Duofern(object):
             DUOFERN_DecodeWeatherSensorConfig(hash)
 
             # Rauchmelder Batterie
-        elif msg[0:8] == "0fff1323":
+        elif msg[0:8] == "0fff1323":  # pragma: no cover
             battery = "low" if int(msg[8:8 + 2], 16) <= 10 else "ok"
             batteryLevel = int(msg[8:8 + 2], 16)
 
