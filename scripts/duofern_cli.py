@@ -44,6 +44,15 @@ parser.add_argument('--pair', action='store_true',
                          'paired with this SYSTEMCODE are found while waiting for pairing, these are also added to'
                          'CONFIGFILE',
                     default=False)
+
+parser.add_argument('--unpair', action='store_true',
+                    help='Stick will wait for pairing for {} seconds. Afterwards look in the config file for the paired '
+                         'device name or call this program again to list the newly found device. If devices that were '
+                         'paired with this SYSTEMCODE are found while waiting for pairing, these are also added to'
+                         'CONFIGFILE',
+                    default=False)
+
+
 parser.add_argument('--pairtime', help='time to wait for pairing requests', metavar="SECONDS", default=60, type=int)
 
 parser.add_argument('--refresh', action='store_true',
@@ -118,6 +127,30 @@ class DuofernCLI(Cmd):
                 print("Please use an integer number to indicate TIMEOUT in seconds")
         print("Starting pairing mode... waiting  {} seconds".format(int(timeout)))
         self.stick.pair(timeout=timeout)
+        time.sleep(args.pairtime + 0.5)
+        self.stick.sync_devices()
+        print("Pairing done, Config file updated.")
+
+    def do_unpair(self, args):
+        """
+        Usage:
+          unpair <TIMEOUT>
+
+        Start pairing mode. Pass a timeout in seconds as <TIMEOUT>.
+        Will return after the timeout if no devices start pairing within the given timeout.
+
+        Example:
+        duofern> unpair 10
+
+        """
+        timeout = 10
+        if len(args) != 0:
+            try:
+                timeout = int(args[0])
+            except:
+                print("Please use an integer number to indicate TIMEOUT in seconds")
+        print("Starting pairing mode... waiting  {} seconds".format(int(timeout)))
+        self.stick.unpair(timeout=timeout)
         time.sleep(args.pairtime + 0.5)
         self.stick.sync_devices()
         print("Pairing done, Config file updated.")
@@ -255,6 +288,15 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         stick.pair(timeout=args.pairtime)
+        time.sleep(args.pairtime + 0.5)
+        stick.sync_devices()
+        print("""""")
+
+    if args.unpair:
+        print("entering pairing mode")
+        stick._initialize()
+        stick.start()
+        stick.unpair(timeout=args.pairtime)
         time.sleep(args.pairtime + 0.5)
         stick.sync_devices()
         print("""""")
