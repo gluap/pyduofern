@@ -26,6 +26,7 @@
 import asyncio
 import logging
 import os
+import re
 import tempfile
 
 import pytest
@@ -61,6 +62,7 @@ class TransportMock:
         self.unittesting = True
         self.replay = self.readin(replayfile)
         self.finished_actions = []
+        self.receiveloop = asyncio.async(self.receive_loop())
         pass
 
     @classmethod
@@ -77,9 +79,14 @@ class TransportMock:
 
     def next_is_received(self):
         if not self.replay: return False
-        return self.replay[-1][0][1:] != "sent"
+        return self.replay[-1][0][1:] == "received"
+
+    def next_is_action(self):
+        if not self.replay: return False
+        return self.replay[-1][0][1:] == "sending_command"
 
     def next_optional(self):
+        if not self.replay: return False
         return self.replay[-1][0][0] == "?"
 
     def write(self, data):
@@ -89,14 +96,29 @@ class TransportMock:
             self.finished_actions.append(result)  # pragma: no cover
         else:
             self.finished_actions.append("OK")
-        while self.next_is_received():
-            line = self.next_line()[1].strip()
-            try:
-                self.proto.data_received(bytearray.fromhex(line))
-                self.finished_actions.append("OK")
-            except Exception:
-                self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")  # pragma: no cover
-            self.proto._ready.set()
+
+    #  yield from asyncio.ensure_future(self.receive())
+
+    @asyncio.coroutine
+    def receive_loop(self):
+        while self.replay:
+            yield
+            if self.next_is_received():
+                line = self.next_line()[1].strip()
+                try:
+                    yield self.proto.data_received(bytearray.fromhex(line))
+                    self.finished_actions.append("OK")
+                except Exception as exc:  # pragma: no cover
+                    self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")
+                    logger.exception("", exc_info=True)
+
+    @asyncio.coroutine
+    def actions(self):
+        while self.next_is_action():
+            command_args = self.next_line()[1:]
+            command_args_ = [re.sub("[,()']?", "", arg) for arg in command_args]
+            command_args_[1:] = [int(arg) if re.match("^[0-9]+$", arg) else arg for arg in command_args_[1:]]
+            yield from self.proto.command(*command_args_)
 
     def check_if_next_matches(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
@@ -129,4 +151,21 @@ def test_init_against_mocked_stick(event_loop, replayfile):
     assert ["OK"] * len(
         proto.transport.finished_actions) == proto.transport.finished_actions, "some sends did not match" \
                                                                                "the recording"
+
+    yield from asyncio.wait_for(proto.available, 666666)
+
+    # if proto.transport.next_is_sent():
+    #    proto.transport.write(bytearray.fromhex(proto.transport.replay[-1][1].strip()))
+    @asyncio.coroutine
+    def feedback_loop():
+        while proto.transport.replay:
+            yield
+
+            if proto.transport.next_is_action():
+                asyncio.ensure_future(proto.transport.actions())
+                print("bla")
+
+    feedbackloop = yield from asyncio.ensure_future(feedback_loop())
+    proto.transport.receiveloop.cancel()
+
     proto.send_loop.cancel()
