@@ -161,6 +161,9 @@ commands instead of buying a weather station.
 Changelog
 =========
 
+**0.23**
+- added recordings and increased coverage of unit tests (no result-based tests yet though -- just checking if every replay runs until the end without hanging)
+
 **0.22**
 - Added recording of actions for replay in integration tests
 - Improved unit tests
