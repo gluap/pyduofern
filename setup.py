@@ -14,8 +14,7 @@ setup(name='pyduofern',
       url='https://github.com/gluap/pyduofern',
       author='Paul Görgen',
       author_email='pypi@pgoergen.de',
-      license='GPL-2.0', globals()
-l
+      license='GPL-2.0',
 
       packages=['pyduofern'],
 
