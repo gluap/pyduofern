@@ -165,6 +165,9 @@ commands instead of buying a weather station.
 Changelog
 =========
 
+**0.23.2**
+- renamed README.rst and moved version number from `setup.py` to `__init__.py`
+
 **0.23.1**
 - fixed references to repository url
 - upped version for pypi release
