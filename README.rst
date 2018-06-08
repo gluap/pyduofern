@@ -48,15 +48,13 @@ License::
 Getting Started
 ===============
 
-To install the python module run ``python setup.py install`` if you downloaded
-the sources already or use the convenience mechanism and run::
+Install via::
+
+     pip3 install pyduofern
+
+or if you previously want the development version from github::
 
      pip3 install git+https://github.com/gluap/pyduofern.git
-
-
-or if you previously installed the package::
-
-     pip3 install --ugprade git+https://github.com/gluap/pyduofern.git
 
 udev configuration
 ==================
