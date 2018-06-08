@@ -11,10 +11,11 @@ setup(name='pyduofern',
           'Programming Language :: Python :: 3.4',
       ],
 
-      url='https://bitbucket.org/gluap/pyduofern',
+      url='https://github.com/gluap/pyduofern',
       author='Paul Görgen',
       author_email='pypi@pgoergen.de',
-      license='GPL-2.0',
+      license='GPL-2.0', globals()
+l
 
       packages=['pyduofern'],
 
