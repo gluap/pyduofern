@@ -5,6 +5,10 @@ pyduofern
 .. image:: https://coveralls.io/repos/github/gluap/pyduofern/badge.svg?branch=master
     :target: https://coveralls.io/github/gluap/pyduofern?branch=master
 
+**Disclaimer:** this library is **not** endorsed by the company Rademacher, the manufacturer of home automation products
+under the label duofern. The name pyduofern was chosen to indicate the function of the library: communicating with
+duofern devices via python.
+
 These are my efforts in porting the `FHEM <http://fhem.de/fhem.html>`_
 `Duofern USB-Stick <https://wiki.fhem.de/wiki/DUOFERN>`_ based module to
 `Homeassistant <https://home-assistant.io/>`_. As of now the port is rather ugly, but it is usable enough to control
@@ -44,15 +48,13 @@ License::
 Getting Started
 ===============
 
-To install the python module run ``python setup.py install`` if you downloaded
-the sources already or use the convenience mechanism and run::
+Install via::
+
+     pip3 install pyduofern
+
+or if you previously want the development version from github::
 
      pip3 install git+https://github.com/gluap/pyduofern.git
-
-
-or if you previously installed the package::
-
-     pip3 install --ugprade git+https://github.com/gluap/pyduofern.git
 
 udev configuration
 ==================
@@ -160,6 +162,13 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+
+**0.23.2**
+- renamed README.rst and moved version number from `setup.py` to `__init__.py`
+
+**0.23.1**
+- fixed references to repository url
+- upped version for pypi release
 
 **0.23**
 - added recordings and increased coverage of unit tests (no result-based tests yet though -- just checking if every replay runs until the end without hanging)

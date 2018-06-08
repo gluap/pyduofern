@@ -10,3 +10,5 @@ dist/**
 .idea/**
 **/du*ern.json
 **/mysensors.json
+.pypirc
+.coverage
