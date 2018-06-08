@@ -165,6 +165,10 @@ commands instead of buying a weather station.
 Changelog
 =========
 
+**0.23.1**
+- fixed references to repository url
+- upped version for pypi release
+
 **0.23**
 - added recordings and increased coverage of unit tests (no result-based tests yet though -- just checking if every replay runs until the end without hanging)
 

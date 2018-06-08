@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='pyduofern',
-      version='0.23',
+      version='0.23.1',
       description='Library for controlling Rademacher DuoFern actors using python. Requires the Rademacher'
                   'Duofern USB Stick Art.-Nr.: 70000093',
       classifiers=[
