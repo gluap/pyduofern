@@ -5,6 +5,10 @@ pyduofern
 .. image:: https://coveralls.io/repos/github/gluap/pyduofern/badge.svg?branch=master
     :target: https://coveralls.io/github/gluap/pyduofern?branch=master
 
+**Disclaimer:** this library is **not** endorsed by the company Rademacher, the manufacturer of home automation products
+under the label duofern. The name pyduofern was chosen to indicate the function of the library: communicating with
+duofern devices via python.
+
 These are my efforts in porting the `FHEM <http://fhem.de/fhem.html>`_
 `Duofern USB-Stick <https://wiki.fhem.de/wiki/DUOFERN>`_ based module to
 `Homeassistant <https://home-assistant.io/>`_. As of now the port is rather ugly, but it is usable enough to control
