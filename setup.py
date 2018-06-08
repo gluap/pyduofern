@@ -1,8 +1,10 @@
 # coding=utf-8
 from setuptools import setup
 
+from pyduofern import __version__ as version
+
 setup(name='pyduofern',
-      version='0.23.1',
+      version=version,
       description='Library for controlling Rademacher DuoFern actors using python. Requires the Rademacher'
                   'Duofern USB Stick Art.-Nr.: 70000093',
       classifiers=[
@@ -29,5 +31,7 @@ setup(name='pyduofern',
           'tox', 'pytest', 'pytest-asyncio'
       ],
 
-      scripts=["scripts/duofern_cli.py"]
+      scripts=["scripts/duofern_cli.py"],
+
+      long_description=open('README.rst', 'r').read()
       )
