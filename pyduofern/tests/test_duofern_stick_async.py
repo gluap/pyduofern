@@ -110,6 +110,5 @@ def test_raises_when_run_with_long_code():
     loop = asyncio.get_event_loop()
 
     with pytest.raises(AssertionError):
-        proto = pyduofern.duofern_stick.DuofernStickAsync(loop,
-                                                          config_file_json=tempfile.mktemp(),
+        proto = pyduofern.duofern_stick.DuofernStickAsync(config_file_json=tempfile.mktemp(),
                                                           recording=False, system_code="faaaf")
