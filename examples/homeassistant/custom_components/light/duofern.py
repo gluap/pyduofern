@@ -8,10 +8,8 @@ import voluptuous as vol
 # Import the device class from the component that you want to support
 from homeassistant.components.light import Light, PLATFORM_SCHEMA
 
-from pyduofern.duofern_stick import DuofernStickThreaded
-
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pyduofern']
+REQUIREMENTS = ['pyduofern==0.23.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +26,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Assign configuration variables. The configuration check takes care they are
     # present.
+
+    from pyduofern.duofern_stick import DuofernStickThreaded
+
     serial_port = config.get('serial_port')
     code = config.get('code')
     configfile = config.get('config_file')
