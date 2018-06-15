@@ -293,7 +293,10 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.last_packet = 0.0
         self.callback = None
 
-        self.send_loop = asyncio.async(self._send_messages())
+        if loop == None:
+            loop = asyncio.get_event_loop()
+
+        self.send_loop = asyncio.async(self._send_messages(), loop=loop)
 
         self.available = asyncio.Future()
 
