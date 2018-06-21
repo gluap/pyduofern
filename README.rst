@@ -52,9 +52,9 @@ Install via::
 
      pip3 install pyduofern
 
-or if you previously want the development version from github::
+or if you want the development version from github::
 
-     pip3 install git+https://github.com/gluap/pyduofern.git
+     pip3 install git+https://github.com/gluap/pyduofern.git@dev
 
 udev configuration
 ==================
