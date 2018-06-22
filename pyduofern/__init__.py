@@ -23,3 +23,8 @@
 #   along with this program; if not, write to the Free Software Foundation,
 #   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 __version__ = "0.23.2"
+
+__all__ = ['DuofernException', 'DuofernStick', 'DuofernStickAsync', 'duoACK']
+
+from .duofern_stick import DuofernStick, DuofernStickAsync, duoACK
+from .exceptions import DuofernException

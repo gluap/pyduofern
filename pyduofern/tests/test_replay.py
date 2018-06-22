@@ -38,7 +38,7 @@ from pyduofern.duofern_stick import hex
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-import pyduofern.duofern_stick  # import DuofernStickAsync
+from pyduofern.duofern_stick import DuofernStickAsync
 
 
 # @pytest.fixture  # (scope="function", params=[True, False])
@@ -136,9 +136,7 @@ class TransportMock:
 @pytest.mark.parametrize('replayfile', list_replays())
 @pytest.mark.asyncio
 def test_init_against_mocked_stick(event_loop, replayfile):
-    proto = pyduofern.duofern_stick.DuofernStickAsync(event_loop, system_code="ffff",
-                                                      config_file_json=tempfile.mktemp(),
-                                                      recording=False)
+    proto = DuofernStickAsync(event_loop, system_code="ffff", config_file_json=tempfile.mktemp(), recording=False)
     proto.transport = TransportMock(proto, replayfile)
     proto._ready = asyncio.Event()
 

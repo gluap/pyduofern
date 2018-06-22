@@ -33,9 +33,10 @@ import pytest
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-import pyduofern.duofern_stick  # import DuofernStickAsync
+from pyduofern import DuofernStickAsync, DuofernException, duoACK  # import DuofernStickAsync
+
+
 # from pyduofern.duofern_stick import DuofernStickAsync
-from pyduofern.exceptions import DuofernException
 
 
 @pytest.fixture(
@@ -50,8 +51,8 @@ def configfile(request):
 def looproto(request, configfile):
     loop = asyncio.get_event_loop()
 
-    proto = pyduofern.duofern_stick.DuofernStickAsync(loop, system_code="ffff", config_file_json=configfile,
-                                                      recording=request.param)
+    proto = DuofernStickAsync(loop, system_code="ffff", config_file_json=configfile,
+                              recording=request.param)
     return loop, proto
 
 
@@ -63,8 +64,8 @@ class TransportMock:
 
     def write(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
-        if data != bytearray.fromhex(pyduofern.duofern_stick.duoACK):
-            self.proto.data_received(bytearray.fromhex(pyduofern.duofern_stick.duoACK))
+        if data != bytearray.fromhex(duoACK):
+            self.proto.data_received(bytearray.fromhex(duoACK))
         self.proto._ready.set()
 
 
@@ -92,23 +93,21 @@ def test_raises_when_run_without_code():
     loop = asyncio.get_event_loop()
 
     with pytest.raises(DuofernException):
-        proto = pyduofern.duofern_stick.DuofernStickAsync(loop, config_file_json=tempfile.mktemp(), recording=False)
+        proto = DuofernStickAsync(loop, config_file_json=tempfile.mktemp(), recording=False)
 
 
 def test_raises_when_run_with_wrong_code():
     loop = asyncio.get_event_loop()
 
     with pytest.raises(AssertionError):
-        proto = pyduofern.duofern_stick.DuofernStickAsync(loop,
-                                                          config_file_json=os.path.join(
-                                                              os.path.abspath(os.path.dirname(__file__)), 'files',
-                                                              'duofern.json'),
-                                                          recording=False, system_code="faaf")
+        proto = DuofernStickAsync(loop,
+                                  config_file_json=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'files',
+                                                                'duofern.json'),
+                                  recording=False, system_code="faaf")
 
 
 def test_raises_when_run_with_long_code():
     loop = asyncio.get_event_loop()
 
     with pytest.raises(AssertionError):
-        proto = pyduofern.duofern_stick.DuofernStickAsync(config_file_json=tempfile.mktemp(),
-                                                          recording=False, system_code="faaaf")
+        proto = DuofernStickAsync(config_file_json=tempfile.mktemp(), recording=False, system_code="faaaf")

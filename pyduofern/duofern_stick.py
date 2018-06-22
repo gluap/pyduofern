@@ -74,7 +74,8 @@ def refresh_serial_connection(function):
 
 
 class DuofernStick(object):
-    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, recording=None, *args, **kwargs):
+    def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, recording=None,
+                 changes_callback=None, *args, **kwargs):
         """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
@@ -98,7 +99,7 @@ class DuofernStick(object):
             self.config = {'devices': []}
 
         if duofern_parser is None:
-            duofern_parser = Duofern(send_hook=self.add_serial_and_send)
+            duofern_parser = Duofern(send_hook=self.add_serial_and_send, changes_callback=changes_callback)
 
         self.duofern_parser = duofern_parser
         self.running = False
@@ -158,6 +159,9 @@ class DuofernStick(object):
 
     def send(self, msg, **kwargs):  # pragma: no cover
         raise NotImplementedError("need to use an implementation of the Duofernstick")
+
+    def add_updates_callback(self, callback):
+        self.duofern_parser.changes_callback = callback
 
     def _dump_config(self):
         with open(self.config_file, "w") as config_fh:
@@ -281,7 +285,7 @@ def send_and_await_reply(protocol, message, message_identifier):
 
 class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     def __init__(self, loop=None, *args, **kwargs):
-        super(DuofernStickAsync, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.duofern_parser.asyncio = True
         self.initialization_step = 0
         self.loop = loop

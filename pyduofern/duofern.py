@@ -85,12 +85,13 @@ def DUOFERN_DecodeWeatherSensorConfig(*args):
 
 
 class Duofern(object):
-    def __init__(self, send_hook=None, asyncio=False):
+    def __init__(self, send_hook=None, asyncio=False, changes_callback=None):
         self.asyncio = asyncio
         self.modules = {'by_code': {}}  # i guess this is supposed to be a hash of self.modules...
         self.ignore_devices = {}  # should replace attrValrel
         assert send_hook is not None, "Must define send callback"
         self.send_hook = send_hook
+        self.changes_callback = changes_callback
         pass
 
     def add_device(self, code, name=None):
@@ -108,6 +109,8 @@ class Duofern(object):
 
     def update_state(self, code, key, value, trigger=None):
         self.modules['by_code'][code][key] = value
+        if self.changes_callback:
+            self.changes_callback()
 
     def delete_state(self, code, key):
         if key in self.modules['by_code'][code]:
