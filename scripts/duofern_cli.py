@@ -77,6 +77,8 @@ parser.add_argument('--stairwell_on', help='switch on stairwell (for "Steckdosen
                     default=None)
 parser.add_argument('--stairwell_off', help='switch on stairwell (for "Steckdosenaktor")', metavar="NAME", nargs='+',
                     default=None)
+parser.add_argument('--position', help='set shutter position', metavar="NAME", nargs='+',
+                    default=None, type=int)
 
 
 def splitargs(func):
@@ -365,6 +367,17 @@ if __name__ == "__main__":
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_off]
         for blind_id in ids:
             stick.command(blind_id, "stairwellFunction", "off")
+            time.sleep(0.5)
+            stick.command(blind_id, "on")
+            time.sleep(2)
+
+    if args.position is not None:
+        stick._initialize()
+        stick.start()
+        time.sleep(0.5)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_off]
+        for blind_id in ids:
+            stick.command(blind_id, "position", 100 - args.position)
             time.sleep(0.5)
             stick.command(blind_id, "on")
             time.sleep(2)
