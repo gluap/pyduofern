@@ -163,6 +163,9 @@ commands instead of buying a weather station.
 Changelog
 =========
 
+**0.23.3**
+- added ``--position`` to CLI
+
 **0.23.2**
 - renamed README.rst and moved version number from `setup.py` to `__init__.py`
 
