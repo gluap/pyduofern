@@ -52,9 +52,9 @@ Install via::
 
      pip3 install pyduofern
 
-or if you previously want the development version from github::
+or if you want the development version from github::
 
-     pip3 install git+https://github.com/gluap/pyduofern.git
+     pip3 install git+https://github.com/gluap/pyduofern.git@dev
 
 udev configuration
 ==================
@@ -110,6 +110,8 @@ the name ``kitchen``::
     duofern_cli.py --set_name 408ea2 kitchen
     # you can now try to also have it move up or down:
     duofern_cli.py --up kitchen
+    # or try to set the position of a blind (0=down, 100=up)
+    duofern_cli.py --position 100 kitchen
 
 Hopefully you now have working command line interface that knows how to move up or down your shutters. But the python
 interface can do more, (which I was so far too lazy to expose via the command line):
@@ -162,6 +164,9 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+
+**0.23.3**
+- added ``--position`` to CLI
 
 **0.23.2**
 - renamed README.rst and moved version number from `setup.py` to `__init__.py`
