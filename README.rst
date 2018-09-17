@@ -110,6 +110,8 @@ the name ``kitchen``::
     duofern_cli.py --set_name 408ea2 kitchen
     # you can now try to also have it move up or down:
     duofern_cli.py --up kitchen
+    # or try to set the position of a blind (0=down, 100=up)
+    duofern_cli.py --position 100 kitchen
 
 Hopefully you now have working command line interface that knows how to move up or down your shutters. But the python
 interface can do more, (which I was so far too lazy to expose via the command line):

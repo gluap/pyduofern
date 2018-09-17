@@ -77,8 +77,9 @@ parser.add_argument('--stairwell_on', help='switch on stairwell (for "Steckdosen
                     default=None)
 parser.add_argument('--stairwell_off', help='switch on stairwell (for "Steckdosenaktor")', metavar="NAME", nargs='+',
                     default=None)
-parser.add_argument('--position', help='set shutter position', metavar="NAME", nargs='+',
+parser.add_argument('--position', help='set shutter position', metavar="NAME", nargs='?',
                     default=None, type=int)
+parser.add_argument('blinds', nargs='+', metavar="BLINDS", help='blinds to act on')
 
 
 def splitargs(func):
@@ -315,8 +316,6 @@ if __name__ == "__main__":
         time.sleep(0.5)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
         for blind_id in ids:
-            logging.info("partytime upping {}".format(blind_id))
-            logging.info(stick.duofern_parser.asyncio)
             stick.command(blind_id, "up")
             time.sleep(2)
 
@@ -375,7 +374,7 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         time.sleep(0.5)
-        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_off]
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.blinds]
         for blind_id in ids:
             stick.command(blind_id, "position", 100 - args.position)
             time.sleep(0.5)
