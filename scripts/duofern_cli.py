@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # coding=utf-8
 #   python interface for dufoern usb stick
 #   Copyright (C) 2017 Paul Görgen
@@ -77,9 +77,8 @@ parser.add_argument('--stairwell_on', help='switch on stairwell (for "Steckdosen
                     default=None)
 parser.add_argument('--stairwell_off', help='switch on stairwell (for "Steckdosenaktor")', metavar="NAME", nargs='+',
                     default=None)
-parser.add_argument('--position', help='set shutter position', metavar="NAME", nargs='?',
-                    default=None, type=int)
-parser.add_argument('blinds', nargs='+', metavar="BLINDS", help='blinds to act on')
+parser.add_argument('--position', help='move shutter NAME to position POSITION', metavar=('POSITION', 'NAME'), nargs=2,
+                    default=None, type=str)
 
 
 def splitargs(func):
@@ -382,13 +381,13 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         time.sleep(1)
-        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.blinds]
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.position[1:]]
         for blind_id in ids:
-            stick.command(blind_id, "position", 100 - args.position)
+            stick.command(blind_id, "position", 100 - int(args.position[0]))
             time.sleep(0.5)
-            stick.command(blind_id, "position", 100 - args.position)
+            stick.command(blind_id, "position", 100 - int(args.position[0]))
             time.sleep(0.5)
-            stick.command(blind_id, "position", 100 - args.position)
+            stick.command(blind_id, "position", 100 - int(args.position[0]))
             time.sleep(2)
 
     stick.stop()
