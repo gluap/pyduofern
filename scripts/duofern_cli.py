@@ -313,25 +313,33 @@ if __name__ == "__main__":
     if args.up:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.up]
         for blind_id in ids:
+            stick.command(blind_id, "up")
+            time.sleep(0.5)
+            stick.command(blind_id, "up")
+            time.sleep(0.5)
             stick.command(blind_id, "up")
             time.sleep(2)
 
     if args.down:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.down]
         for blind_id in ids:
+            stick.command(blind_id, "down")
+            time.sleep(0.5)
+            stick.command(blind_id, "down")
+            time.sleep(0.5)
             stick.command(blind_id, "down")
             time.sleep(2)
 
     if args.on:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.on]
         for blind_id in ids:
             stick.command(blind_id, "on")
@@ -340,7 +348,7 @@ if __name__ == "__main__":
     if args.off:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.off]
         for blind_id in ids:
             stick.command(blind_id, "off")
@@ -349,7 +357,7 @@ if __name__ == "__main__":
     if args.stairwell_on:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_on]
         for blind_id in ids:
             stick.command(blind_id, "stairwellTime", 10)
@@ -362,7 +370,7 @@ if __name__ == "__main__":
     if args.stairwell_off:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stairwell_off]
         for blind_id in ids:
             stick.command(blind_id, "stairwellFunction", "off")
@@ -373,12 +381,14 @@ if __name__ == "__main__":
     if args.position is not None:
         stick._initialize()
         stick.start()
-        time.sleep(0.5)
+        time.sleep(1)
         ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.blinds]
         for blind_id in ids:
             stick.command(blind_id, "position", 100 - args.position)
             time.sleep(0.5)
-            stick.command(blind_id, "on")
+            stick.command(blind_id, "position", 100 - args.position)
+            time.sleep(0.5)
+            stick.command(blind_id, "position", 100 - args.position)
             time.sleep(2)
 
     stick.stop()
