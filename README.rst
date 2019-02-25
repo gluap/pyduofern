@@ -165,6 +165,9 @@ commands instead of buying a weather station.
 Changelog
 =========
 
+**0.23.5**
+- python 3.7 support should enable current hassio version
+
 **0.23.3**
 - added ``--position`` to CLI
 
@@ -186,4 +189,3 @@ Changelog
 
 **0.21.1**
 - fixed bug where device IDs containing `cc` would be be messed up when inserting channel number.
-
