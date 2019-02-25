@@ -150,7 +150,7 @@ def test_init_against_mocked_stick(event_loop, replayfile):
         proto.transport.finished_actions) == proto.transport.finished_actions, "some sends did not match" \
                                                                                "the recording"
 
-    yield from asyncio.wait_for(proto.available, 666666)
+    asyncio.wait_for(proto.available, 666666)
 
     # if proto.transport.next_is_sent():
     #    proto.transport.write(bytearray.fromhex(proto.transport.replay[-1][1].strip()))
