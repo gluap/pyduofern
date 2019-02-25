@@ -37,13 +37,13 @@ coro = serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(l
 f, proto = loop.run_until_complete(coro)
 # proto.handshake()
 
-initialization = asyncio.async(proto.handshake())
+initialization = asyncio.ensure_future(proto.handshake())
 asyncio.wait(initialization)
 
 
 def cb(a):
     logging.info(a)
-    asyncio.async(proto.command("409882", "position", 10))
+    asyncio.ensure_future(proto.command("409882", "position", 10))
 
 
 proto.available.add_done_callback(cb)

@@ -25,7 +25,7 @@ class Output(asyncio.Protocol):
         self.buffer = None
         self.last_packet = 0.0
         self.callback = None
-        self.send_loop = asyncio.async(self._send_messages())
+        self.send_loop = asyncio.ensure_future(self._send_messages())
 
     def connection_made(self, transport):
         self.transport = transport
@@ -151,7 +151,7 @@ def cancelall():
 
 
 try:
-    initialization = asyncio.async(handshake(proto))
+    initialization = asyncio.ensure_future(handshake(proto))
     init = asyncio.wait(initialization)
     logger.info("loop forever")
     loop.add_signal_handler(signal.SIGINT, cancelall)

@@ -300,7 +300,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         if loop == None:
             loop = asyncio.get_event_loop()
 
-        self.send_loop = asyncio.async(self._send_messages(), loop=loop)
+        self.send_loop = asyncio.ensure_future(self._send_messages(), loop=loop)
 
         self.available = asyncio.Future()
 

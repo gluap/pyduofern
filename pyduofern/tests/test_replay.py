@@ -62,7 +62,7 @@ class TransportMock:
         self.unittesting = True
         self.replay = self.readin(replayfile)
         self.finished_actions = []
-        self.receiveloop = asyncio.async(self.receive_loop())
+        self.receiveloop = asyncio.ensure_future(self.receive_loop())
         pass
 
     @classmethod
@@ -140,7 +140,7 @@ def test_init_against_mocked_stick(event_loop, replayfile):
     proto.transport = TransportMock(proto, replayfile)
     proto._ready = asyncio.Event()
 
-    init_ = asyncio.async(proto.handshake())
+    init_ = asyncio.ensure_future(proto.handshake())
 
     proto._ready.set()
 

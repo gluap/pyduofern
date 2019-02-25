@@ -74,7 +74,7 @@ def test_init_against_mocked_stick(looproto):
     proto.transport = TransportMock(proto)
     proto._ready = asyncio.Event()
 
-    initialization = asyncio.async(proto.handshake())
+    initialization = asyncio.ensure_future(proto.handshake())
 
     proto._ready.set()
 
