@@ -27,17 +27,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Assign configuration variables. The configuration check takes care they are
     # present.
 
-    from pyduofern.duofern_stick import DuofernStickThreaded
-
-    serial_port = config.get('serial_port')
-    code = config.get('code')
-    configfile = config.get('config_file')
-
-    if 'duofern' not in hass.data:
-        hass.data['duofern'] = {
-            'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile)}
-        hass.data['duofern']['stick'].start()
-        # Setup connection with devices/cloud
     stick = hass.data["duofern"]['stick']
 
     # Add devices

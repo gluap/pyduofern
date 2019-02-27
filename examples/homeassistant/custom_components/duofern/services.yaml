@@ -1,0 +1,11 @@
+# Describes the format for available Wink services
+
+start_pairing:
+  description: pair duofern devices
+  fields:
+    timeout:
+      description: timeout in seconds
+      example: 60
+
+sync_devices:
+  description: re-sync devices (trigger after pairing)
