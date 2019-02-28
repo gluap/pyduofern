@@ -8,6 +8,9 @@ import voluptuous as vol
 # Import the device class from the component that you want to support
 from homeassistant.components.light import Light, PLATFORM_SCHEMA
 
+from . import DuofernDevice
+from .const import DOMAIN
+
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['pyduofern==0.23.5']
 
@@ -21,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the Awesome Light platform."""
 
     # Assign configuration variables. The configuration check takes care they are
@@ -30,22 +33,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     stick = hass.data["duofern"]['stick']
 
     # Add devices
-    add_devices(DuofernLight(device['id'], device['name'], stick) for device in stick.config['devices'] if
-                device['id'].startswith('46'))
+    for cover in [dev for dev in stick.config['devices'] if dev['id'].startswith('46')]:
+        if cover['id'] not in hass.data[DOMAIN]['unique_ids']:
+            hass.data[DOMAIN]['unique_ids'].add(cover['id'])
+            add_entities([DuofernLight(cover['id'], cover['name'], stick, hass)])
 
 
-class DuofernLight(Light):
-    def __init__(self, id, desc, stick):
+class DuofernLight(DuofernDevice, Light):
+    def __init__(self, *args, **kwargs):
         """Initialize the shutter."""
-        self._id = id
-        self._name = desc
-        self._state = None
-        self._brightness = None
-        self._stick = stick
-
-    @property
-    def name(self):
-        return self._name
+        super().__init__(*args, **kwargs)
 
     @property
     def is_on(self):
@@ -64,6 +61,3 @@ class DuofernLight(Light):
         self._stick.command(self._id, "off")
         # this is a hotfix because currently the state is not correctly detected from duofern
         self._stick.duofern_parser.modules['by_code'][self._id]['state'] = 0
-
-    def update(self):
-        pass

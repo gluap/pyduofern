@@ -6,6 +6,7 @@ import logging
 # Import the device class from the component that you want to support
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
+from . import DuofernDevice
 from .const import DOMAIN
 
 # Home Assistant depends on 3rd party packages for API specific code.
@@ -14,30 +15,24 @@ REQUIREMENTS = ['pyduofern==0.23.5']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the Awesome Light platform."""
 
     stick = hass.data[DOMAIN]['stick']
 
     # Add devices
-    add_devices(DuofernShutter(device['id'], device['name'], stick) for device in stick.config['devices'] if
-                not device['id'].startswith('46'))
+    for cover in [dev for dev in stick.config['devices'] if not dev['id'].startswith('46')]:
+        if cover['id'] not in hass.data[DOMAIN]['unique_ids']:
+            hass.data[DOMAIN]['unique_ids'].add(cover['id'])
+            add_entities([DuofernShutter(cover['id'], cover['name'], stick, hass)])
 
 
-class DuofernShutter(CoverDevice):
+class DuofernShutter(DuofernDevice, CoverDevice):
     """Representation of Duofern cover type device."""
 
-    def __init__(self, id, desc, stick):
+    def __init__(self, *args, **kwargs):
         """Initialize the shutter."""
-        self._id = id
-        self._name = desc
-        self._state = None
-        self._brightness = None
-        self._stick = stick
-
-    @property
-    def name(self):
-        return self._name
+        super().__init__(*args, **kwargs)
 
     @property
     def current_cover_position(self):
@@ -55,20 +50,6 @@ class DuofernShutter(CoverDevice):
         except KeyError:
             return False
 
-    @property
-    def device_info(self):
-        return {
-            'identifiers': {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._id)
-            },
-            'name': self.name,
-            'manufacturer': "Rademacher",
-            'model': "unknown",
-            'sw_version': "unknown",
-            # 'via_hub': (hue.DOMAIN, self.api.bridgeid),
-        }
-
     def open_cover(self):
         """roll up cover"""
         self._stick.command(self._id, "up")
@@ -85,15 +66,3 @@ class DuofernShutter(CoverDevice):
         """set position (100-position to make the default intuitive: 0%=closed, 100%=open"""
         position = kwargs.get(ATTR_POSITION)
         self._stick.command(self._id, "position", 100 - position)
-
-    def update(self):
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assistant.
-        
-        (no new data needs to be fetched, the stick updates itsself in a thread)
-        (not the best style for homeassistant, I know. I'll port to asyncio if I find the time)
-        """
-        pass
-        # self._state = True
-        # self._brightness = None
