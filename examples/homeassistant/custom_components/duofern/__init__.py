@@ -24,7 +24,7 @@ PAIRING_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Setup the Awesome Light platform."""
 
     # Assign configuration variables. The configuration check takes care they are
