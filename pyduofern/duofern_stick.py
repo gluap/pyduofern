@@ -85,9 +85,12 @@ class DuofernStick(object):
         """
         super().__init__(*args, **kwargs)
         self.config_file = None
+        self.ephemeral = ephemeral
         if not ephemeral:
             config_file_json = self.prepare_config(config_file_json)
             self.config_file = config_file_json
+        else:
+            self.config = {"devices": []}
 
         if duofern_parser is None:
             duofern_parser = Duofern(send_hook=self.add_serial_and_send, changes_callback=changes_callback)
@@ -99,7 +102,7 @@ class DuofernStick(object):
 
         self.system_code = None
         if system_code is not None:
-            if 'system_code' in self.config:
+            if not ephemeral and 'system_code' in self.config:
                 assert self.config['system_code'].lower() == system_code.lower(), \
                     'System code passed as argument "{}" differs from config file "{}", please manually change the ' \
                     'config file {} if this is what you intended. If you change the code you paired your devices with' \

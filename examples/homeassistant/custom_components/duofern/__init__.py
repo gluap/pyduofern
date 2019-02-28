@@ -18,9 +18,9 @@ from .const import DOMAIN, DUOFERN_COMPONENTS
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    vol.Optional('serial_port', default=None): cv.string,
-    vol.Optional('config_file', default=None): cv.string,
-    vol.Optional('code', default=None): cv.string,
+    vol.Required('serial_port', default=None): cv.string,
+    vol.Required('config_file', default=None): cv.string,
+    vol.Required('code', default=None): cv.string,
 }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,9 +37,13 @@ def setup(hass, config):
 
     from pyduofern.duofern_stick import DuofernStickThreaded
 
-    serial_port = config.get('serial_port')
-    code = config.get('code')
-    configfile = config.get('config_file')
+    if config.get(DOMAIN) is not None:
+        serial_port = config[DOMAIN].get('serial_port')
+        code = config[DOMAIN].get('code')
+        configfile = config[DOMAIN].get('config_file')
+    else:
+        raise Exception("duofern needs configuration")
+
     hass.data['duofern'] = {
         'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile,
                                       ephemeral=True)}
