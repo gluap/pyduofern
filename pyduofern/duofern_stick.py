@@ -75,7 +75,7 @@ def refresh_serial_connection(function):
 
 class DuofernStick(object):
     def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, recording=None,
-                 changes_callback=None, *args, **kwargs):
+                 changes_callback=None, ephemeral=None, *args, **kwargs):
         """ 
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
@@ -84,19 +84,10 @@ class DuofernStick(object):
          defaults to pyduofern.duofern.Duofern()
         """
         super().__init__(*args, **kwargs)
-        if config_file_json is None:  # pragma: no cover
-            config_file_json = os.path.expanduser("~/.duofern.json")
-
-        if os.path.isfile(config_file_json):
-            try:
-                with open(config_file_json, "r") as config_file_fh:
-                    self.config = json.load(config_file_fh)
-            except json.decoder.JSONDecodeError:  # pragma: no cover
-                self.config = {'devices': []}
-                logger.info('failed reading config')
-        else:
-            logger.info('config is not file')
-            self.config = {'devices': []}
+        self.config_file = None
+        if not ephemeral:
+            config_file_json = self.prepare_config(config_file_json)
+            self.config_file = config_file_json
 
         if duofern_parser is None:
             duofern_parser = Duofern(send_hook=self.add_serial_and_send, changes_callback=changes_callback)
@@ -127,7 +118,6 @@ class DuofernStick(object):
         self.pairing = False
         self.unpairing = False
         self.write_queue = []
-        self.config_file = config_file_json
         self.config['system_code'] = self.system_code
         self._dump_config()
         self.initialized = False
@@ -138,6 +128,21 @@ class DuofernStick(object):
         self.recording = recording
         if recording:
             self._initialize_recording()
+
+    def prepare_config(self, config_file_json):
+        if config_file_json is None:  # pragma: no cover
+            config_file_json = os.path.expanduser("~/.duofern.json")
+        if os.path.isfile(config_file_json):
+            try:
+                with open(config_file_json, "r") as config_file_fh:
+                    self.config = json.load(config_file_fh)
+            except json.decoder.JSONDecodeError:  # pragma: no cover
+                self.config = {'devices': []}
+                logger.info('failed reading config')
+        else:
+            logger.info('config is not file')
+            self.config = {'devices': []}
+        return config_file_json
 
     def _initialize_recording(self):
         if 'recording_dir' in self.config:
@@ -164,8 +169,9 @@ class DuofernStick(object):
         self.duofern_parser.changes_callback = callback
 
     def _dump_config(self):
-        with open(self.config_file, "w") as config_fh:
-            json.dump(self.config, config_fh, indent=4)
+        if not self.ephemeral:
+            with open(self.config_file, "w") as config_fh:
+                json.dump(self.config, config_fh, indent=4)
 
     def process_message(self, message):
         if self.recording:
