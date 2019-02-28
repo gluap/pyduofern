@@ -48,6 +48,14 @@ License::
 Getting Started
 ===============
 
+Usage with Homeassistant
+========================
+For usage with homeassistant please see
+`here <https://github.com/gluap/pyduofern/tree/master/examples>`_
+
+Usage on commmandline
+===================
+
 Install via::
 
      pip3 install pyduofern
@@ -57,7 +65,7 @@ or if you want the development version from github::
      pip3 install git+https://github.com/gluap/pyduofern.git@dev
 
 udev configuration
-==================
+------------------
 to make your usb stick easy to identify deploy an `udev rules <https://wiki.debian.org/udev>`_ file in
 ``/etc/udev/rules.d/98-duofern.rules`` or the equivalent of your distribution. The following worked for my
 stick::
@@ -79,7 +87,7 @@ helps avoid confusion if you use other usb-serial devices. Also be warned: The l
 accessible to non-root users. But likely on your system you will be the only user anyhow.
 
 Getting Started
-===============
+---------------
 To start using your stick you can use the ``duofern_cli.py`` script which should have been installed together
 with the pyduofern module. Begin by choosing a 4 hex-digit system code. Ideally write it down, if you forget
 it, you will likely have to chose a new system code and reset your devices in order to be able to pair them again.
@@ -126,10 +134,6 @@ the config file with all paired blinds.::
 
 will start up the stick and listen for connecting blinds for 60 seconds. It will store all the blinds that were found
 in the default config file.a
-
-Usage with Homeassistant
-========================
-Find an example code for using these blinds with homeassistant in the examples folder
 
 
 Usage from python
