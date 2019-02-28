@@ -34,7 +34,11 @@ def setup(hass, config):
 
     if config.get(DOMAIN) is not None:
         serial_port = config[DOMAIN].get(CONF_SERIAL_PORT)
+        if serial_port is None:
+            serial_port = "/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"
         code = config[DOMAIN].get(CONF_CODE)
+        if code is None:
+            code = "affe"
     else:
         raise Exception("duofern needs configuration")
 
