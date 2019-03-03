@@ -57,9 +57,14 @@ def setup(hass, config):
     stick = hass.data["duofern"]['stick']
 
     def start_pairing(call):
-        hass.data[DOMAIN]['stick'].pair(call)
+        hass.data[DOMAIN]['stick'].pair(timeout=call.data.get("timeout", 60))
+
+    def start_unpairing(call):
+        hass.data[DOMAIN]['stick'].unpair(timeout=call.data.get("timeout", 60))
 
     hass.services.register(DOMAIN, 'start_pairing', start_pairing, PAIRING_SCHEMA)
+    hass.services.register(DOMAIN, 'start_unpairing', start_unpairing, PAIRING_SCHEMA)
+
 
     def sync_devices(call):
         refresh()
