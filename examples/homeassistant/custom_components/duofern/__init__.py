@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 # Import the device class from the component that you want to support
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pyduofern==0.24']
+REQUIREMENTS = ['pyduofern==0.23.5']
 
 _LOGGER = logging.getLogger(__name__)
 
