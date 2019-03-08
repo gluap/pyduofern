@@ -41,8 +41,7 @@ def setup(hass, config):
     code = config.get('code')
     configfile = config.get('config_file')
     hass.data['duofern'] = {
-        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile,
-                                      ephemeral=True)}
+        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile)}
     hass.data['duofern']['stick'].start()
 
     # Setup connection with devices/cloud
