@@ -15,16 +15,22 @@ REQUIREMENTS = ['pyduofern==0.23.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, DUOFERN_COMPONENTS, CONF_CODE, CONF_SERIAL_PORT
+from .const import DOMAIN, DUOFERN_COMPONENTS
 
-# from . import config_flow
+# Validation of the user's configuration
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
+    vol.Required('serial_port', default=None): cv.string,
+    vol.Required('config_file', default=None): cv.string,
+    vol.Required('code', default=None): cv.string,
+}),
+}, extra=vol.ALLOW_EXTRA)
 
 PAIRING_SCHEMA = vol.Schema({
     vol.Optional('timeout', default=30): cv.positive_int,
 })
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Setup the Awesome Light platform."""
 
     # Assign configuration variables. The configuration check takes care they are
@@ -33,8 +39,9 @@ async def async_setup(hass, config):
     from pyduofern.duofern_stick import DuofernStickThreaded
 
     if config.get(DOMAIN) is not None:
-        serial_port = config[DOMAIN].get(CONF_SERIAL_PORT)
-        code = config[DOMAIN].get(CONF_CODE)
+        serial_port = config[DOMAIN].get('serial_port')
+        code = config[DOMAIN].get('code')
+        configfile = config[DOMAIN].get('config_file')
     else:
         raise Exception("duofern needs configuration")
 
@@ -42,9 +49,8 @@ async def async_setup(hass, config):
         hass.data[DOMAIN]['stick'].sync_devices()
         for _component in DUOFERN_COMPONENTS:
             discovery.load_platform(hass, _component, DOMAIN, {}, config)
-
     hass.data['duofern'] = {
-        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code,
+        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile,
                                       ephemeral=True, changes_callback=refresh),
         'unique_ids': set()}
     hass.data['duofern']['stick'].start()
