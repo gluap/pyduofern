@@ -55,20 +55,6 @@ class DuofernShutter(CoverDevice):
         except KeyError:
             return False
 
-    @property
-    def device_info(self):
-        return {
-            'identifiers': {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._id)
-            },
-            'name': self.name,
-            'manufacturer': "Rademacher",
-            'model': "unknown",
-            'sw_version': "unknown",
-            # 'via_hub': (hue.DOMAIN, self.api.bridgeid),
-        }
-
     def open_cover(self):
         """roll up cover"""
         self._stick.command(self._id, "up")
