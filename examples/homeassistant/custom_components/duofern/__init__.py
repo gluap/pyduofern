@@ -10,15 +10,15 @@ from homeassistant.helpers import discovery
 # Import the device class from the component that you want to support
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pyduofern==0.23.5']
+REQUIREMENTS = ['pyduofern==0.25']
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, DUOFERN_COMPONENTS
+from .const import DOMAIN, DUOFERN_COMPONENTS, CONF_SERIAL_PORT, CONF_CODE
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    vol.Optional('serial_port', default=None): cv.string,
+    vol.Optional('serial_port',                 default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): cv.string,
     vol.Optional('config_file', default=None): cv.string,
     vol.Optional('code', default=None): cv.string,
 }),
@@ -37,12 +37,20 @@ def setup(hass, config):
 
     from pyduofern.duofern_stick import DuofernStickThreaded
 
-    serial_port = config.get('serial_port')
-    code = config.get('code')
-    configfile = config.get('config_file')
-    hass.data['duofern'] = {
-        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile)}
-    hass.data['duofern']['stick'].start()
+    if config.get(DOMAIN) is not None:
+        serial_port = config[DOMAIN].get(CONF_SERIAL_PORT)
+        if serial_port is None:
+            serial_port = "/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"
+        code = config[DOMAIN].get(CONF_CODE)
+        if code is None:
+            code = "affe"
+        configfile = config[DOMAIN].get('config_file')
+
+    hass.data[DOMAIN] = {
+        'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile,
+                                      ephemeral=True),
+        'devices': {}}
+    hass.data[DOMAIN]['stick'].start()
 
     # Setup connection with devices/cloud
     stick = hass.data["duofern"]['stick']
@@ -64,7 +72,13 @@ def setup(hass, config):
         for _component in DUOFERN_COMPONENTS:
             discovery.load_platform(hass, _component, DOMAIN, {}, config)
 
+    def clean_config(call):
+        stick.clean_config()
+        stick.sync_cevides()
+
     hass.services.register(DOMAIN, 'sync_devices', sync_devices)
+    hass.services.register(DOMAIN, 'clean_config', sync_devices)
+
 
     def refresh(call):
         _LOGGER.warning(call)

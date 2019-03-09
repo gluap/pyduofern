@@ -9,7 +9,6 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from .const import DOMAIN
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pyduofern==0.23.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,20 +19,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     stick = hass.data[DOMAIN]['stick']
 
     # Add devices
-    add_devices(DuofernShutter(device['id'], device['name'], stick) for device in stick.config['devices'] if
-                not device['id'].startswith('46'))
+    to_add = [DuofernShutter(device['id'], device['name'], stick, hass) for device in stick.config['devices'] if
+              not device['id'].startswith('46') and not device['id'] in hass.data[DOMAIN]['devices'].keys()]
+    add_devices(to_add)
 
 
 class DuofernShutter(CoverDevice):
     """Representation of Duofern cover type device."""
 
-    def __init__(self, id, desc, stick):
+    def __init__(self, id, desc, stick, hass):
         """Initialize the shutter."""
         self._id = id
         self._name = desc
         self._state = None
         self._brightness = None
         self._stick = stick
+        hass.data[DOMAIN]['devices'][id] = self
 
     @property
     def name(self):
