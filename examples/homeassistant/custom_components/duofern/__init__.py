@@ -20,7 +20,7 @@ from .const import DOMAIN, DUOFERN_COMPONENTS, CONF_SERIAL_PORT, CONF_CODE
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
     vol.Optional('serial_port',                 default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): cv.string,
     vol.Optional('config_file', default=None): cv.string,
-    vol.Optional('code', default=None): cv.string,
+    vol.Optional('code', default="deda"): cv.string,
 }),
 }, extra=vol.ALLOW_EXTRA)
 
