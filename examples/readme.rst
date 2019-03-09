@@ -3,23 +3,49 @@ Examples
 
 Homeassistant
 -------------
+There are two services you can call via the service interface:
 
-To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add the custom_components directory to
-``~/.homeassistant/`` directory and enable it by adding the following lines to the config file. Use the same
-values for the light and cover platforms.
+``duofern.start_pairing`` starts the pairing mode for a given number of seconds.
+``duofern.sync_devices`` will force-sync any newly discovered devices.
 
-If you have other `light` or `cover` platforms in place please just add the lines starting with `- platform` to the
-respective sections.::
+Please use the renaming feature in the homeassistant GUI to arrive at human readable
+names for your devices.
 
-    cover:
-      - platform: duofern
-        serial_port: # optional, defaults to first detected tty. You probably want to adapt this, for example
-                     # to /dev/duofernstick after adapting your udev config
-        config_file: # optional, defaults to ~/.dufoern.json
-        code: beef # 4 hex digits, optional if correctly defined in .duofern.json
-    # light is basically a duplicate... sorry
-    light:
-      - platform: duofern
-        serial_port: # see above
-        config_file: # see above
-        code: beef # see above
+
+Hassio
+------
+
+The following is setup procedure with hassio
+
+- install hassio
+- via the GUI enable the `SSH Server addon<https://www.home-assistant.io/addons/ssh/>`_
+- login via ssh
+- download the pyduofern repo via git, copy the custom component and add duofern to your config by running::
+
+     git clone https://github.com/gluap/pyduofern/
+     cp -r pyduofern/examples/homeassistant/custom_components /config/
+     # next line only if you don't already have it yet:
+     echo "duofern:" >/config/configuration.yaml
+     # next use 4 digit hex code of your choice instead of ffff ("password" for your duofern net)
+     echo "  code: ffff" >> /config/configuration.yaml
+
+- connect the stick and restart homeassistant via the GUI
+- stick should stop blinking once homeassistant initializes it
+- devices previously paired with the coded should be auto-detected.
+- to pair a device call the service "duofern.start_pairing" via the gui and do the pairing motions from the manual of the device
+- to force a refresh of paired devices (should happen automatically) run the service duofern.sync_devices
+
+
+Vanilla homeassistant (no hassio)
+---------------------------------
+To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add the ``custom_components`` directory from the examples  to
+``~/.homeassistant/`` directory and enable it by adding the following to your ``configuration.yaml``::
+
+    duofern:
+       # serial_port defaults to
+       # /dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0
+       # which should work on most linuxes
+       # serial_port: /dev/ttyUSB0
+       # code defaults to 0000 and should definitely be chosen randomly
+       # (4 hex digits required)
+       code: deda
