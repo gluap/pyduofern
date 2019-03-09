@@ -49,9 +49,14 @@ def setup(hass, config):
 
     def start_pairing(call):
         _LOGGER.warning("start pairing")
-        hass.data[DOMAIN]['stick'].pair(call)
+        hass.data[DOMAIN]['stick'].pair(call.data.get('timeout', 60))
+
+    def start_unpairing(call):
+        _LOGGER.warning("start pairing")
+        hass.data[DOMAIN]['stick'].unpair(call.data.get('timeout', 60))
 
     hass.services.register(DOMAIN, 'start_pairing', start_pairing, PAIRING_SCHEMA)
+    hass.services.register(DOMAIN, 'start_unpairing', start_unpairing, PAIRING_SCHEMA)
 
     def sync_devices(call):
         stick.sync_devices()
