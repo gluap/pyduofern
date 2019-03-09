@@ -164,6 +164,11 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.26**
+- restarted from 0.23 to get somewhat working auto detection
+
+**0.24**
+- somewhat broken changes for auto detection
 
 **0.23.5**
 - python 3.7 support should enable current hassio version
