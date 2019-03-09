@@ -75,8 +75,8 @@ def refresh_serial_connection(function):
 
 class DuofernStick(object):
     def __init__(self, system_code=None, config_file_json=None, duofern_parser=None, recording=None,
-                 changes_callback=None, *args, **kwargs):
-        """ 
+                 changes_callback=None, ephemeral=None, *args, **kwargs):
+        """
         :param device: path to com port opened by usb stick (e.g. /dev/ttyUSB0)
         :param system_code: system code
         :param config_file_json: path to config file. use the same one to conveniently update info about your system
@@ -84,19 +84,10 @@ class DuofernStick(object):
          defaults to pyduofern.duofern.Duofern()
         """
         super().__init__(*args, **kwargs)
-        if config_file_json is None:  # pragma: no cover
-            config_file_json = os.path.expanduser("~/.duofern.json")
-
-        if os.path.isfile(config_file_json):
-            try:
-                with open(config_file_json, "r") as config_file_fh:
-                    self.config = json.load(config_file_fh)
-            except json.decoder.JSONDecodeError:  # pragma: no cover
-                self.config = {'devices': []}
-                logger.info('failed reading config')
-        else:
-            logger.info('config is not file')
-            self.config = {'devices': []}
+        self.config_file = None
+        self.ephemeral = ephemeral
+        config_file_json = self.prepare_config(config_file_json)
+        self.config_file = config_file_json
 
         if duofern_parser is None:
             duofern_parser = Duofern(send_hook=self.add_serial_and_send, changes_callback=changes_callback)
@@ -108,7 +99,7 @@ class DuofernStick(object):
 
         self.system_code = None
         if system_code is not None:
-            if 'system_code' in self.config:
+            if not ephemeral and 'system_code' in self.config:
                 assert self.config['system_code'].lower() == system_code.lower(), \
                     'System code passed as argument "{}" differs from config file "{}", please manually change the ' \
                     'config file {} if this is what you intended. If you change the code you paired your devices with' \
@@ -117,7 +108,7 @@ class DuofernStick(object):
                                                                         os.path.abspath(config_file_json))
 
             self.system_code = system_code
-        elif 'system_code' in self.config:  # pragma: no cover
+        elif 'system_code' in self.config and not ephemeral:  # pragma: no cover
             self.system_code = self.config['system_code']
         else:
             raise DuofernException("No system code specified. Since the system code is a security feature no default"
@@ -127,8 +118,8 @@ class DuofernStick(object):
         self.pairing = False
         self.unpairing = False
         self.write_queue = []
-        self.config_file = config_file_json
-        self.config['system_code'] = self.system_code
+        if not ephemeral:
+            self.config['system_code'] = self.system_code
         self._dump_config()
         self.initialized = False
 
@@ -138,6 +129,21 @@ class DuofernStick(object):
         self.recording = recording
         if recording:
             self._initialize_recording()
+
+    def prepare_config(self, config_file_json):
+        if config_file_json is None:  # pragma: no cover
+            config_file_json = os.path.expanduser("~/.duofern.json")
+        if os.path.isfile(config_file_json):
+            try:
+                with open(config_file_json, "r") as config_file_fh:
+                    self.config = json.load(config_file_fh)
+            except json.decoder.JSONDecodeError:  # pragma: no cover
+                self.config = {'devices': []}
+                logger.info('failed reading config')
+        else:
+            logger.info('config is not file')
+            self.config = {'devices': []}
+        return config_file_json
 
     def _initialize_recording(self):
         if 'recording_dir' in self.config:
@@ -219,6 +225,10 @@ class DuofernStick(object):
             #  Dispatch($hash, $rmsg, \%addvals);
         #        logger.info("got {}".format(message))
         self.duofern_parser.parse(message)
+
+    def clean_config(self):
+        self.config = dict(devices=[])
+        self._dump_config()
 
     def sync_devices(self):
         known_codes = [device['id'].lower() for device in self.config['devices']]
