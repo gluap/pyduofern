@@ -42,10 +42,12 @@ To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add t
 ``~/.homeassistant/`` directory and enable it by adding the following to your ``configuration.yaml``::
 
     duofern:
-       # serial_port defaults to
-       # /dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0
-       # which should work on most linuxes
-       # serial_port: /dev/ttyUSB0
-       # code defaults to 0000 and should definitely be chosen randomly
-       # (4 hex digits required)
+       # (4 hex digits as code required)
        code: deda
+       # Optional options, comment in if required:
+       # serial_port: /dev/ttyUSB0
+       #   # serial_port defaults to
+       #   # /dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0
+       #   # which should work on most linuxes
+       # config_file: ~/duofern.json
+       #   # config_file defaults to duofern.json in homeassistant folder (assuming custom_component is used)

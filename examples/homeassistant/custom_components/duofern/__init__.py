@@ -20,8 +20,9 @@ from .const import DOMAIN, DUOFERN_COMPONENTS, CONF_SERIAL_PORT, CONF_CODE
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
     vol.Optional('serial_port', default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): cv.string,
-    vol.Optional('config_file', default= os.path.dirname(__file__)+"/duofern.json"): cv.string,
-    vol.Optional('code', default="deda"): cv.string,
+    vol.Optional('config_file', default= os.path.join(os.path.dirname(__file__), "../../duofern.json")): cv.string,
+    # config file: default to homeassistant config directory (assuming this is a custom component)
+    vol.Optional('code', default="0000"): cv.string,
 }),
 }, extra=vol.ALLOW_EXTRA)
 
