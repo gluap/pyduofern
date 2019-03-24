@@ -6,6 +6,7 @@ Homeassistant
 There are two services you can call via the service interface:
 
 ``duofern.start_pairing`` starts the pairing mode for a given number of seconds.
+
 .. image:: ./pairing.png
 
 ``duofern.sync_devices`` will force-sync any newly discovered devices.
