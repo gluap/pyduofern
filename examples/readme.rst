@@ -6,10 +6,16 @@ Homeassistant
 There are two services you can call via the service interface:
 
 ``duofern.start_pairing`` starts the pairing mode for a given number of seconds.
+.. image:: ./pairing.png
+
 ``duofern.sync_devices`` will force-sync any newly discovered devices.
+
+.. image:: ./sync_devices.png
 
 Please use the renaming feature in the homeassistant GUI to arrive at human readable
 names for your devices.
+
+.. image:: ./renaming.png
 
 
 Hassio
@@ -18,7 +24,7 @@ Hassio
 The following is setup procedure with hassio
 
 - install hassio
-- via the GUI enable the `SSH Server addon<https://www.home-assistant.io/addons/ssh/>`_
+- via the GUI enable the `SSH Server addon <https://www.home-assistant.io/addons/ssh/>`_
 - login via ssh
 - download the pyduofern repo via git, copy the custom component and add duofern to your config by running::
 
@@ -31,10 +37,16 @@ The following is setup procedure with hassio
 
 - connect the stick and restart homeassistant via the GUI
 - stick should stop blinking once homeassistant initializes it
-- devices previously paired with the coded should be auto-detected.
-- to pair a device call the service "duofern.start_pairing" via the gui and do the pairing motions from the manual of the device
+- devices previously paired with the coded should be auto-detected, if not call the service ``duofern.sync_devices`` (see below).
+- to pair a device call the service ``duofern.start_pairing`` via the gui and do the pairing motions from the manual of the device
+
+.. image:: ./pairing.png
+
 - to force a refresh of paired devices (should happen automatically) run the service duofern.sync_devices
 
+.. image:: ./sync_devices.png
+
+- if required you can edit the ``configuration.yaml`` and use the config options from the "Vanilla homeassistant" section.
 
 Vanilla homeassistant (no hassio)
 ---------------------------------
