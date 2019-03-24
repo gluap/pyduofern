@@ -78,7 +78,7 @@ def setup(hass, config):
         stick.sync_devices()
 
     hass.services.register(DOMAIN, 'sync_devices', sync_devices)
-    hass.services.register(DOMAIN, 'clean_config', sync_devices)
+    hass.services.register(DOMAIN, 'clean_config', clean_config)
 
 
     def refresh(call):
