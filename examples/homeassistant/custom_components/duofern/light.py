@@ -58,6 +58,10 @@ class DuofernLight(Light):
         except KeyError:
             return None
 
+    @property
+    def unique_id(self):
+        return self._id
+
     def turn_on(self):
         self._stick.command(self._id, "on")
         # this is a hotfix because currently the state is not correctly detected from duofern

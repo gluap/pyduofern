@@ -56,6 +56,10 @@ class DuofernShutter(CoverDevice):
         except KeyError:
             return False
 
+    @property
+    def unique_id(self):
+        return self._id
+
     def open_cover(self):
         """roll up cover"""
         self._stick.command(self._id, "up")
