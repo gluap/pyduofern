@@ -1,26 +1,9 @@
 Examples
 ========
 
-Homeassistant
--------------
-There are two services you can call via the service interface:
 
-``duofern.start_pairing`` starts the pairing mode for a given number of seconds.
-
-.. image:: ./pairing.png
-
-``duofern.sync_devices`` will force-sync any newly discovered devices.
-
-.. image:: ./sync_devices.png
-
-Please use the renaming feature in the homeassistant GUI to arrive at human readable
-names for your devices.
-
-.. image:: ./renaming.png
-
-
-Hassio
-------
+Setup with Hassio
+-----------------
 
 The following is setup procedure with hassio
 
@@ -49,8 +32,8 @@ The following is setup procedure with hassio
 
 - if required you can edit the ``configuration.yaml`` and use the config options from the "Vanilla homeassistant" section.
 
-Vanilla homeassistant (no hassio)
----------------------------------
+Setup with vanilla homeassistant (no hassio)
+--------------------------------------------
 To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add the ``custom_components`` directory from the examples  to
 ``~/.homeassistant/`` directory and enable it by adding the following to your ``configuration.yaml``::
 
@@ -64,3 +47,20 @@ To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add t
        #   # which should work on most linuxes
        # config_file: ~/duofern.json
        #   # config_file defaults to duofern.json in homeassistant folder (assuming custom_component is used)
+
+Usage
+-----
+There are two services you can call via the service interface:
+
+``duofern.start_pairing`` starts the pairing mode for a given number of seconds.
+
+.. image:: ./pairing.png
+
+``duofern.sync_devices`` will force-sync any newly discovered devices.
+
+.. image:: ./sync_devices.png
+
+Please use the renaming feature in the homeassistant GUI to arrive at human readable
+names for your devices.
+
+.. image:: ./renaming.png
