@@ -16,6 +16,8 @@ my Duofern blinds. I did not port the Weather-Station related features of the or
 do not own the corresponding hardware and have no means to test if it works. I only tested it with the model
 *RolloTron Standard DuoFern 14233011 Funk-Gurtwickler Aufputz*.
 
+This requires the Duofern USB Stick Art.-Nr.: 70000093 by Rademacher.
+
 I do not provide any guarantees for the usability of this software. Use at your own risk.
 
 License::
@@ -164,7 +166,7 @@ commands instead of buying a weather station.
 
 Changelog
 =========
-**0.26**
+**0.25**
 - restarted from 0.23 to get somewhat working auto detection
 
 **0.24**
