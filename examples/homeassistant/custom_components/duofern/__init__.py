@@ -11,7 +11,7 @@ from homeassistant.helpers import discovery
 # Import the device class from the component that you want to support
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pyduofern==0.25']
+REQUIREMENTS = ['pyduofern==0.25.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,6 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, 'sync_devices', sync_devices)
     hass.services.register(DOMAIN, 'clean_config', clean_config)
-
 
     def refresh(call):
         _LOGGER.warning(call)

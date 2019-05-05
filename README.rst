@@ -166,6 +166,9 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.25.2**
+- try to fix https://github.com/gluap/pyduofern/issues/2
+
 **0.25.1**
 - changed custom component to fix bug in switch implementation accidentally introduced
   recently.

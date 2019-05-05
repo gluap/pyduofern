@@ -518,12 +518,12 @@ class Duofern(object):
             if id not in sensorMsg:
                 logger.warning("unknown message {}".format(msg))
 
-            chan = msg[sensorMsg['id']['chan'] * 2 + 2:sensorMsg['id']['chan'] * 2 + 4]
+            chan = msg[sensorMsg[id]['chan'] * 2 + 2:sensorMsg[id]['chan'] * 2 + 4]
             if code[0:2] in ("61", "70", "71"):
                 chan = "01"
 
             chans = []
-            if (sensorMsg['id'][chan] == 5):
+            if (sensorMsg[id][chan] == 5):
                 chanCount = 4 if (code[0:2] == "73") else 5
                 for x in range(0, chanCount):
                     if ((0x01 << x) & int(chan, 16)):
@@ -545,19 +545,19 @@ class Duofern(object):
             for chan in chans:
                 if id[2:4] in ("1a", "18", "19", "01", "02", "03"):
                     if (id[2:4] == "1a") or (id[0:2] == "0e") or (code[0:2] in ("a0", "a2")):
-                        self.update_state(code, "state", sensorMsg['id']['state'] + "." + chan, "1")
+                        self.update_state(code, "state", sensorMsg[id]['state'] + "." + chan, "1")
                     else:
-                        self.update_state(code, "state", sensorMsg['id']['state'], "1")
+                        self.update_state(code, "state", sensorMsg[id]['state'], "1")
 
-                    self.update_state(code, "channelchan", sensorMsg['id']['name'], "1")
+                    self.update_state(code, "channelchan", sensorMsg[id]['name'], "1")
                 else:
                     if (code[0:2] not in ("69", "73")) or (id[2:4] in ("11", "12")):
                         chan = ""
                     if code[0:2] in ("65", "a5", "aa", "ab"):
-                        self.update_state(code, "state", sensorMsg['id']['state'], "1")
+                        self.update_state(code, "state", sensorMsg[id]['state'], "1")
 
-                    self.update_state(code, "event", sensorMsg['id']['name'] + "." + chan, "1")
-                    DoTrigger(hash["name"], sensorMsg['id'][name] + "." + chan)
+                    self.update_state(code, "event", sensorMsg[id]['name'] + "." + chan, "1")
+                    DoTrigger(hash["name"], sensorMsg[id][name] + "." + chan)
 
 
 
