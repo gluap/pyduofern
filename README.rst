@@ -166,6 +166,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.25.1**
+- changed custom component to fix bug in switch implementation accidentally introduced
+  recently.
+
 **0.25**
 - restarted from 0.23 to get somewhat working auto detection
 
