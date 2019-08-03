@@ -183,15 +183,11 @@ class Duofern(object):
             # Universalaktor -- not tested yet
             elif code[0:2] == "43":  # pragma: no cover
                 self.update_state(code, "state", "OK", "1")
-                module_definition01 = self.modules['by_code'][code + "01"]
+                module_definition01 = self.modules['by_code'][code]
                 if not module_definition01:
                     DoTrigger("global", "UNDEFINED DUOFERN_code+_01 DUOFERN code+01")
-                    module_definition01 = self.modules['by_code'][code + "01"]
 
-                module_definition02 = self.modules['by_code'][code + "02"]
-                if not module_definition02:
-                    DoTrigger("global", "UNDEFINED DUOFERN_code+_02 DUOFERN code02")
-                    module_definition02 = self.modules['by_code'][code + "02"]
+                module_definition02 = None
 
             if module_definition01:
                 hash = module_definition01
