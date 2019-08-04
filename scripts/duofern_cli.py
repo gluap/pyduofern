@@ -52,6 +52,9 @@ parser.add_argument('--unpair', action='store_true',
                          'CONFIGFILE',
                     default=False)
 
+parser.add_argument('--remote',
+                    help='Pair by code. Added devices are also added to CONFIGFILE',
+                    metavar='DEVICE_ID', default=None)
 
 parser.add_argument('--pairtime', help='time to wait for pairing requests', metavar="SECONDS", default=60, type=int)
 
@@ -153,6 +156,14 @@ class DuofernCLI(Cmd):
                 print("Please use an integer number to indicate TIMEOUT in seconds")
         print("Starting pairing mode... waiting  {} seconds".format(int(timeout)))
         self.stick.unpair(timeout=timeout)
+        time.sleep(args.pairtime + 0.5)
+        self.stick.sync_devices()
+        print("Pairing done, Config file updated.")
+
+    def do_remote(self, args):
+        code = args[0][0:6]
+        timeout = int(args[1])
+        self.stick.remote(code, timeout)
         time.sleep(args.pairtime + 0.5)
         self.stick.sync_devices()
         print("Pairing done, Config file updated.")
@@ -299,6 +310,16 @@ if __name__ == "__main__":
         stick._initialize()
         stick.start()
         stick.unpair(timeout=args.pairtime)
+        time.sleep(args.pairtime + 0.5)
+        stick.sync_devices()
+        print("""""")
+
+    if args.remote:
+        print("entering remote pairing mode")
+        stick._initialize()
+        stick.start()
+        stick.pair(timeout=args.pairtime)
+        stick.remote(code=args.remote, timeout=args.pairtime)
         time.sleep(args.pairtime + 0.5)
         stick.sync_devices()
         print("""""")

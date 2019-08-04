@@ -270,6 +270,11 @@ class DuofernStick(object):
         threading.Timer(10, self.stop_unpair).start()
         self.unpairing = True
 
+    def remote(self, code, timeout=10):
+        self.send(duoRemotePair.replace('yyyyyy', code))
+        threading.Timer(timeout, self.stop_pair).start()
+        self.pairing = True
+
     def test_callback(self, arg):
         self.duofern_parser.parse(arg)
 

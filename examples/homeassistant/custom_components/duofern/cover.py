@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Add devices
     to_add = [DuofernShutter(device['id'], device['name'], stick, hass) for device in stick.config['devices'] if
-              not device['id'].startswith('46') and not device['id'] in hass.data[DOMAIN]['devices'].keys()]
+              not (device['id'].startswith('46') or device['id'].startswith('43')) and not device['id'] in hass.data[DOMAIN]['devices'].keys()]
     add_devices(to_add)
 
 
