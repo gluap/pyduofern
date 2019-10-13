@@ -1,0 +1,14 @@
+{
+  "config": {
+    "title": "duofern",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "descritpion": "# yay",
+        "data": {
+          "code": "code"
+        }
+      }
+    }
+  }
+}
