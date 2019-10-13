@@ -19,8 +19,9 @@ from .const import DOMAIN, DUOFERN_COMPONENTS, CONF_SERIAL_PORT, CONF_CODE
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    vol.Optional('serial_port', default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): cv.string,
-    vol.Optional('config_file', default= os.path.join(os.path.dirname(__file__), "../../duofern.json")): cv.string,
+    vol.Optional('serial_port',
+                 default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): cv.string,
+    vol.Optional('config_file', default=os.path.join(os.path.dirname(__file__), "../../duofern.json")): cv.string,
     # config file: default to homeassistant config directory (assuming this is a custom component)
     vol.Optional('code', default="0000"): cv.string,
 }),
@@ -39,7 +40,13 @@ def setup(hass, config):
 
     from pyduofern.duofern_stick import DuofernStickThreaded
 
-    if config.get(DOMAIN) is not None:
+    newstyle_config = hass.config_entries.async_entries(DOMAIN)[0]
+    if newstyle_config:
+        serial_port = newstyle_config.data['serial_port']
+        code = newstyle_config.data['code']
+        configfile = newstyle_config.data['config_file']
+
+    elif config.get(DOMAIN) is not None:
         serial_port = config[DOMAIN].get(CONF_SERIAL_PORT)
         if serial_port is None:
             serial_port = "/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"
