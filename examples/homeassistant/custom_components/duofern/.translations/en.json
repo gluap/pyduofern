@@ -9,6 +9,9 @@
           "code": "code"
         }
       }
+    },
+    "error": {
+      "not_hex": "Code must be a 4 digit hex code of your choice"
     }
   }
 }
