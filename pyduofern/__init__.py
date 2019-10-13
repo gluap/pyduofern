@@ -26,5 +26,9 @@ __version__ = "0.25.2"
 
 __all__ = ['DuofernException', 'DuofernStick', 'DuofernStickAsync', 'duoACK']
 
-from .duofern_stick import DuofernStick, DuofernStickAsync, duoACK
-from .exceptions import DuofernException
+try:
+    from .duofern_stick import DuofernStick, DuofernStickAsync, duoACK
+    from .exceptions import DuofernException
+except ImportError:
+    # do not raise when called from setup.py
+    pass
