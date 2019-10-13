@@ -18,7 +18,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "not_hex"
             else:
                 try:
-                    if hex(int(user_input['code'], 16)).lower() != "0x"+user_input['code'].lower():
+                    if hex(int(user_input['code'], 16)).lower() != "0x" + user_input['code'].lower():
                         errors["base"] = "not_hex"
                 except ValueError:
                     errors["base"] = "not_hex"
@@ -26,13 +26,13 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title='duofern', data=user_input
                 )
-
+        serialdevs = set(os.listdir("/dev/serial/by-id/"))
         return self.async_show_form(
             step_id='user',
             data_schema=vol.Schema({
                 vol.Required('code'): str,
                 vol.Optional('serial_port',
-                             default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): str,
+                             default="/dev/serial/by-id/usb-Rademacher_DuoFern_USB-Stick_WR04ZFP4-if00-port0"): vol.In(serialdevs),
                 vol.Optional('config_file', default=os.path.join(os.path.dirname(__file__), "../../duofern.json")): str
             }),
             errors=errors

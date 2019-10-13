@@ -4,11 +4,14 @@
     "step": {
       "user": {
         "title": "Connect to the device",
-        "descritpion": "# yay",
+        "description": "# yay",
         "data": {
           "code": "code"
         }
       }
+    },
+    "error": {
+      "not_hex": "Code must be a 4 digit hex code of your choice"
     }
   }
 }

@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to the device",
-        "descritpion": "# yay",
+        "description": "# yay",
         "data": {
           "code": "code"
         }
