@@ -83,7 +83,8 @@ accessible to non-root users. But likely on your system you will be the only use
 Getting Started
 ===============
 To start using your stick you can use the ``duofern_cli.py`` script which should have been installed together
-with the pyduofern module. Begin by choosing a 4 hex-digit system code. Ideally write it down, if you forget
+with the pyduofern module. Begin by choosing a 4 hex-digit system code. If you have already used the roller shutters
+with FHEM use the last 4 digits of your FHEM code to preserve pairings. Ideally write it down, if you forget
 it, you will likely have to chose a new system code and reset your devices in order to be able to pair them again.
 It is also a security feature which is why no default is provided.
 

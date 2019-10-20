@@ -17,6 +17,8 @@ The following is setup procedure with hassio
      # next line only if you don't already have it yet:
      echo "duofern:" >/config/configuration.yaml
      # next use 4 digit hex code of your choice instead of ffff ("password" for your duofern net)
+     # if you are migrating from FHEM: Skip the "6f" from the beginning of the code,
+     # only use the last 4 characters
      echo "  code: ffff" >> /config/configuration.yaml
 
 - connect the stick and restart homeassistant via the GUI
@@ -38,7 +40,7 @@ To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add t
 ``~/.homeassistant/`` directory and enable it by adding the following to your ``configuration.yaml``::
 
     duofern:
-       # (4 hex digits as code required)
+       # (4 hex digits as code required, last 4 digits if migrating from FHEM)
        code: deda
        # Optional options, comment in if required:
        # serial_port: /dev/ttyUSB0
