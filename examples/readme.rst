@@ -15,7 +15,7 @@ The following is setup procedure with hassio
      git clone https://github.com/gluap/pyduofern/
      cp -r pyduofern/examples/homeassistant/custom_components /config/
      # next line only if you don't already have it yet:
-     echo "duofern:" >/config/configuration.yaml
+     echo "duofern:" >> /config/configuration.yaml
      # next use 4 digit hex code of your choice instead of ffff ("password" for your duofern net)
      # if you are migrating from FHEM: Skip the "6f" from the beginning of the code,
      # only use the last 4 characters
