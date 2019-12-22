@@ -40,11 +40,13 @@ def setup(hass, config):
 
     from pyduofern.duofern_stick import DuofernStickThreaded
 
-    newstyle_config = hass.config_entries.async_entries(DOMAIN)[0]
-    if newstyle_config:
-        serial_port = newstyle_config.data['serial_port']
-        code = newstyle_config.data['code']
-        configfile = newstyle_config.data['config_file']
+    newstyle_config = hass.config_entries.async_entries(DOMAIN)
+    if len(newstyle_config) > 0:
+        newstyle_config = newstyle_config[0]
+        if newstyle_config:
+            serial_port = newstyle_config.data['serial_port']
+            code = newstyle_config.data['code']
+            configfile = newstyle_config.data['config_file']
 
     elif config.get(DOMAIN) is not None:
         serial_port = config[DOMAIN].get(CONF_SERIAL_PORT)
