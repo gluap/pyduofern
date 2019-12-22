@@ -678,7 +678,7 @@ class Duofern(object):
         yield from self.send_hook(cmd)
 
     @asyncio.coroutine
-    def set(self, code, cmd, *args):
+    def set(self, device_id, cmd, *args):
         # my (hash, @a) = @_
         # b = @a
 
@@ -688,8 +688,8 @@ class Duofern(object):
         #        cmd    = shift @a
         arg = args[0] if len(args) >= 1 else None
         arg2 = args[1] if len(args) > 1 else None
-        code = code[0:0 + 6]
-        name = self.modules['by_code'][code]['name']
+        code = device_id[0:0 + 6]
+        name = self.modules['by_code'][device_id]['name']
 
         # sets
 
@@ -722,7 +722,7 @@ class Duofern(object):
         if code[0:2] in ("65", "74") and len(code) >= 8 and code[6:8] == "01":
             sets = merge_dicts(setsSwitchActor)  # if (code =~ /^(65|74)....01/)
 
-        blindsMode = "off" if not "blindsMode" in self.modules['by_code'][code] else self.modules['by_code'][code]
+        blindsMode = "off" if not "blindsMode" in self.modules['by_code'][device_id] else self.modules['by_code'][device_id]
         if (blindsMode == "on"):
             sets = merge_dicts(sets, setsBlinds)
 
@@ -735,10 +735,10 @@ class Duofern(object):
             return None
 
         elif cmd == "clear":
-            keys = self.modules['by_code'][code].keys()
+            keys = self.modules['by_code'][device_id].keys()
             for key in keys:
                 if key != 'name':
-                    self.modules['by_code'][code].__delitem__(key)
+                    self.modules['by_code'][device_id].__delitem__(key)
             return None
             # cH = (hash)
             # delete _->{READINGS} foreach (@cH)
@@ -753,8 +753,8 @@ class Duofern(object):
         elif cmd == "writeConfig":
             for x in range(0, 8):
                 # for(my x=0; x<8; x++)    {
-                regV = "00000000000000000000" if not ".reg{}".format(x) in self.modules['by_code'][code] else \
-                    self.modules['by_code'][code][".reg{}".format(x)]
+                regV = "00000000000000000000" if not ".reg{}".format(x) in self.modules['by_code'][device_id] else \
+                    self.modules['by_code'][device_id][".reg{}".format(x)]
                 reg = "%02x" % (x + 0x81)
                 buf = duoWeatherWriteConfig
                 buf = buf.replace("yyyyyy", code)
@@ -763,8 +763,8 @@ class Duofern(object):
                 yield from self.send(buf)
                 self.send(buf)
 
-            if "configModified" in self.modules['by_code'][code]:
-                self.modules['by_code'][code].__delitem__("configModified")
+            if "configModified" in self.modules['by_code'][device_id]:
+                self.modules['by_code'][device_id].__delitem__("configModified")
 
             # delete hash->{READINGS}{configModified}
             return None
@@ -935,8 +935,8 @@ class Duofern(object):
             buf = duoCommand
             command = None
 
-            if 'chanNo' in self.modules['by_code'][code]:
-                chanNo = self.modules['by_code'][code]['chanNo']
+            if 'chanNo' in self.modules['by_code'][device_id]:
+                chanNo = self.modules['by_code'][device_id]['chanNo']
             # chanNo = hash->{chanNo} if (hash->{chanNo})
 
             if 'noArg' in commands[cmd]:
@@ -1017,19 +1017,19 @@ class Duofern(object):
             if subCmd not in commands[cmd]:
                 raise Exception("Wrong argument {}, {}".format(arg, subCmd))
 
-            position = -1 if not "position" in self.modules['by_code'][code] else self.modules['by_code'][code][
+            position = -1 if not "position" in self.modules['by_code'][device_id] else self.modules['by_code'][device_id][
                 "position"]
             # toggleUpDown    = AttrVal(name, "toggleUpDown", "0")
-            toggleUpDown = self.modules['by_code'][code]['toggleUpDown'] if 'toggleUpDown' in self.modules['by_code'][
-                code] else 0
-            moving = "stop" if not "moving" in self.modules['by_code'][code] else self.modules['by_code'][code][
+            toggleUpDown = self.modules['by_code'][device_id]['toggleUpDown'] if 'toggleUpDown' in self.modules['by_code'][
+                device_id] else 0
+            moving = "stop" if not "moving" in self.modules['by_code'][device_id] else self.modules['by_code'][device_id][
                 "moving"]
-            timeAutomatic = "on" if not "timeAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["timeAutomatic"]
-            dawnAutomatic = "on" if not "dawnAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["dawnAutomatic"]
-            duskAutomatic = "on" if not "duskAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["duskAutomatic"]
+            timeAutomatic = "on" if not "timeAutomatic" in self.modules['by_code'][device_id] else \
+                self.modules['by_code'][device_id]["timeAutomatic"]
+            dawnAutomatic = "on" if not "dawnAutomatic" in self.modules['by_code'][device_id] else \
+                self.modules['by_code'][device_id]["dawnAutomatic"]
+            duskAutomatic = "on" if not "duskAutomatic" in self.modules['by_code'][device_id] else \
+                self.modules['by_code'][device_id]["duskAutomatic"]
 
             if moving != "stop":
                 if cmd in ('up', 'down', 'toggle'):
