@@ -145,6 +145,7 @@ class Duofern(object):
 
         hash = module_definition
         name = hash['name']
+        channel = None
 
         if name in self.ignore_devices:
             return name
@@ -201,6 +202,7 @@ class Duofern(object):
 
             if module_definition01:
                 hash = module_definition01
+                channel = "01"
 
             # RolloTron
             if format == "21":
@@ -267,6 +269,7 @@ class Duofern(object):
 
                 if module_definition02:
                     hash = module_definition02
+                    channel = "02"
                     level = int(msg[20:20 + 2], 16) & 0x7F
                     modeChange = "on" if int(msg[20:20 + 2], 16) & 0x80 else "off"
                     sunMode = "on" if int(msg[12:12 + 2], 16) & 0x10 else "off"
@@ -547,6 +550,7 @@ class Duofern(object):
 
             if (module_definition01):
                 hash = module_definition01
+                channel = "01"
 
             for chan in chans:
                 if id[2:4] in ("1a", "18", "19", "01", "02", "03"):
@@ -575,6 +579,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
+            channel = "01"
 
             brightnessExp = 1000 if int(msg[8:8 + 4], 16) & 0x0400 else 1
             brightness = (int(msg[8:8 + 4], 16) & 0x01FF) * brightnessExp
@@ -607,6 +612,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
+            channel = "01"
 
             year = msg[12:12 + 2]
             month = msg[14:14 + 2]
@@ -631,6 +637,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
+            channel = "01"
 
             del hash['READINGS']['configModified']
             self.update_state(hash, ".regreg", "regVal", "1")
@@ -761,7 +768,6 @@ class Duofern(object):
                 buf = buf.replace("rr", reg)
                 buf = buf.replace("nnnnnnnnnnnnnnnnnnnn", regV)
                 yield from self.send(buf)
-                self.send(buf)
 
             if "configModified" in self.modules['by_code'][device_id]:
                 self.modules['by_code'][device_id].__delitem__("configModified")
