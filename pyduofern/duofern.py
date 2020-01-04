@@ -98,7 +98,7 @@ class Duofern(object):
         if name is None:
             name = len(self.modules['by_code'])
         logger.debug("adding {}".format(code))
-        self.modules['by_code'][code] = {'name': name, 'channels': set()}
+        self.modules['by_code'][code] = {'name': name, 'channels': {None}}
 
     def del_device(self, code, name=None):
         if name is None:
