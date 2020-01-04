@@ -144,12 +144,15 @@ class Duofern(object):
         # return hash->{NAME} if (code == "FFFFFF")
 
         try:
-            module_definition = self.modules['by_code'][code]
+            # module_definition = self.modules['by_code'][code]
+            name = self.modules['by_code'][code]['name']
+
         except KeyError:
             self.add_device(code)
             logger.info("detected unknown device, ID={}".format(code))
-            module_definition = self.modules['by_code'][code]
+            name = self.modules['by_code'][code]['name']
 
+        #hash="asdf"
         # module_definition01 = None
         # module_definition02 = None
         channel2 = None
@@ -160,8 +163,8 @@ class Duofern(object):
         #            logger.warning("Undefined code {}".format(code))
         #            raise DuofernException("Undefined code {}".format(code))
 
-        hash = module_definition
-        name = hash['name']
+        # hash = module_definition
+        # name = hash['name']
         channel = None
 
         if name in self.ignore_devices:
@@ -194,12 +197,12 @@ class Duofern(object):
 
             # Bewegungsmelder, Wettersensor, Mehrfachwandtaster not tested yet
             if code[0:2] in ("65", "69", "74"):  # pragma: no cover
-                self.update_state(code, "state", "OK", "1", channel=channel)
-                module_definition01 = self.modules['by_code'][code + "01"]
+                #self.update_state(code, "state", "OK", "1", channel=channel)
+                #module_definition01 = self.modules['by_code'][code + "01"]
                 channel = 1
-                if not module_definition01:
-                    DoTrigger("global", "UNDEFINED DUOFERN_code_actor DUOFERN code01")
-                    module_definition01 = self.modules['by_code'][code + "01"]
+                #if not module_definition01:
+                    #DoTrigger("global", "UNDEFINED DUOFERN_code_actor DUOFERN code01")
+                    #module_definition01 = self.modules['by_code'][code + "01"]
 
             # Universalaktor -- not tested yet
             elif code[0:2] == "43":  # pragma: no cover
@@ -585,7 +588,7 @@ class Duofern(object):
                         self.update_state(code, "state", sensorMsg[id]['state'], "1", channel=channel)
 
                     self.update_state(code, "event", sensorMsg[id]['name'] + "." + chan, "1", channel=channel)
-                    DoTrigger(hash["name"], sensorMsg[id][name] + "." + chan)
+                    # DoTrigger(hash["name"], sensorMsg[id][name] + "." + chan)
 
 
 
@@ -657,10 +660,12 @@ class Duofern(object):
             # hash = module_definition01
             channel = 0
 
-            del hash['READINGS']['configModified']
+            logger.warning("Weather sensor not supported yet")
+            #del hash['READINGS']['configModified']
             self.update_state(code, ".regreg", "regVal", "1", channel=channel)
             # self.update_state(code, "regreg", "regVal", "1", channel=channel)
-            DUOFERN_DecodeWeatherSensorConfig(hash)
+
+            #DUOFERN_DecodeWeatherSensorConfig(hash)
 
             # Rauchmelder Batterie
         elif msg[0:8] == "0fff1323":  # pragma: no cover
@@ -674,13 +679,14 @@ class Duofern(object):
 
             # ACK, Befehl vom Aktor empfangen
         elif msg[0:8] == "810003cc":
-            hash['helper']['timeout']['t'] = hash['name']["timeout"]["60"]
+            logger.debug("ack received {}".format(self.modules['by_code'][code]))
+            #hash['helper']['timeout']['t'] = hash['name']["timeout"]["60"]
             ##InternalTimer(gettimeofday()+hash['helper']['timeout']{t}, "DUOFERN_StatusTimeout", hash, 0)
-            hash['helper']['timeout']['count'] = 4
+            #hash['helper']['timeout']['count'] = 4
 
         # NACK, Befehl nicht vom Aktor empfangen
         elif msg[0:8] == "810108aa":
-            logger.warning("missing ack for {}".format(hash))
+            logger.warning("missing ack for {}".format(self.modules['by_code'][code]))
             # self.update_state(code, "state", "MISSING ACK", "1", channel=channel)
             # foreach (grep (/^channel_/, keys%{hash})){
             #   chnHash = module_definitions{hash->{_}}
