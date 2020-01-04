@@ -107,24 +107,30 @@ class Duofern(object):
         if code in self.modules['by_code']:
             del self.modules['by_code'][code]
 
-    def update_state(self, code, key, value, trigger=None, channel=None):
+    def update_state(self, code, key, value, trigger=None, channel: int = None):
         """
 
         :param code: duofern system code
         :param key: some arbitrary key that should be set in the state dict
         :param value: the corresponding value
-        :param trigger: whether or not to trigger
+        :param trigger: whether or not to call the callback
         :param channel: if this is a multichannel actor: The channel the key should be set for
         :return:
         """
-        if channel is None:
+        if channel is not None:
+            channel_str = "{:02x}".format(channel)
+            key = key + "_" + channel_str
+            if 'channels' not in self.modules['by_code'][code]:
+                self.modules['by_code'][code]['channels'] = set()
+            self.modules['by_code'][code]['channels'].add(channel_str)
             self.modules['by_code'][code][key] = value
-        else:
-            self.modules['by_code'][code][key+"_"+channel] = value
         if self.changes_callback and trigger:
             self.changes_callback()
 
-    def delete_state(self, code, key):
+    def delete_state(self, code, key, channel: int = None):
+        if channel is not None:
+            channel_str = "{:02x}".format(channel)
+            key = key + "_" + channel_str
         if key in self.modules['by_code'][code]:
             del self.modules['by_code'][code][key]
 
@@ -204,7 +210,7 @@ class Duofern(object):
 
             if module_definition01:
                 hash = module_definition01
-                channel = "01"
+                channel = 1
 
             # RolloTron
             if format == "21":
@@ -271,7 +277,7 @@ class Duofern(object):
 
                 if module_definition02:
                     hash = module_definition02
-                    channel = "02"
+                    channel = 2
                     level = int(msg[20:20 + 2], 16) & 0x7F
                     modeChange = "on" if int(msg[20:20 + 2], 16) & 0x80 else "off"
                     sunMode = "on" if int(msg[12:12 + 2], 16) & 0x10 else "off"
@@ -364,13 +370,13 @@ class Duofern(object):
                     self.update_state(code, "slatRunTime", slatRunTime, "1", channel=channel)
                     self.update_state(code, "slatPosition", slatPosition, "1", channel=channel)
                 else:
-                    self.delete_state(code, 'tiltInSunPos')
-                    self.delete_state(code, 'tiltInVentPos')
-                    self.delete_state(code, 'tiltAfterMoveLevel')
-                    self.delete_state(code, 'tiltAfterStopDown')
-                    self.delete_state(code, 'module_definitionaultSlatPos')
-                    self.delete_state(code, 'slatRunTime')
-                    self.delete_state(code, 'slatPosition')
+                    self.delete_state(code, 'tiltInSunPos',channel=channel)
+                    self.delete_state(code, 'tiltInVentPos',channel=channel)
+                    self.delete_state(code, 'tiltAfterMoveLevel',channel=channel)
+                    self.delete_state(code, 'tiltAfterStopDown',channel=channel)
+                    self.delete_state(code, 'module_definitionaultSlatPos',channel=channel)
+                    self.delete_state(code, 'slatRunTime',channel=channel)
+                    self.delete_state(code, 'slatPosition',channel=channel)
 
                 self.update_state(code, "moving", "stop", "1", channel=channel)
                 self.update_state(code, "state", state, "1", channel=channel)
@@ -552,7 +558,7 @@ class Duofern(object):
 
             if (module_definition01):
                 hash = module_definition01
-                channel = "01"
+                channel = 1
 
             for chan in chans:
                 if id[2:4] in ("1a", "18", "19", "01", "02", "03"):
@@ -581,7 +587,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
-            channel = "01"
+            channel = 1
 
             brightnessExp = 1000 if int(msg[8:8 + 4], 16) & 0x0400 else 1
             brightness = (int(msg[8:8 + 4], 16) & 0x01FF) * brightnessExp
@@ -614,7 +620,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
-            channel = "01"
+            channel = 1
 
             year = msg[12:12 + 2]
             month = msg[14:14 + 2]
@@ -639,7 +645,7 @@ class Duofern(object):
                 module_definition01 = self.modules['by_code'][code + "00"]
 
             hash = module_definition01
-            channel = "01"
+            channel = 1
 
             del hash['READINGS']['configModified']
             self.update_state(code, ".regreg", "regVal", "1", channel=channel)
@@ -687,7 +693,7 @@ class Duofern(object):
         yield from self.send_hook(cmd)
 
     @asyncio.coroutine
-    def set(self, code, cmd, *args, channel=None):
+    def set(self, code, cmd, *args, channel: int = None):
         # my (hash, @a) = @_
         # b = @a
 
@@ -697,7 +703,8 @@ class Duofern(object):
         #        cmd    = shift @a
         arg = args[0] if len(args) >= 1 else None
         arg2 = args[1] if len(args) > 1 else None
-        code = code[0:0 + 6]
+        assert len(code) == 6, "code should be 6 hex digits"
+        # code = code[0:0 + 6]
         name = self.modules['by_code'][code]['name']
 
         # sets
@@ -936,16 +943,16 @@ class Duofern(object):
         elif cmd in commands:
             logger.info("command valid")
             subCmd = None
-            chanNo = "01"
+            if channel is None:
+                chanNo = "01"
+            else:
+                chanNo = "{:02x}".format(channel)
             argV = "00"
             argW = "0000"
             timer = "00"
             buf = duoCommand
             command = None
 
-            if 'chanNo' in self.modules['by_code'][code]:
-                chanNo = self.modules['by_code'][code]['chanNo']
-            # chanNo = hash->{chanNo} if (hash->{chanNo})
 
             if 'noArg' in commands[cmd]:
                 if (arg and (arg == "timer")):
