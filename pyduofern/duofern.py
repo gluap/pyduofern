@@ -1049,19 +1049,23 @@ class Duofern(object):
             if subCmd not in commands[cmd]:
                 raise Exception("Wrong argument {}, {}".format(arg, subCmd))
 
-            position = -1 if not "position" in self.modules['by_code'][code] else self.modules['by_code'][code][
-                "position"]
+            channel_suffix = ""
+            if channel is not None:
+                channel_suffix = "_" + chanNo
+
+            position = -1 if "position"+channel_suffix not in self.modules['by_code'][code] else \
+                self.modules['by_code'][code]["position"+channel_suffix]
             # toggleUpDown    = AttrVal(name, "toggleUpDown", "0")
-            toggleUpDown = self.modules['by_code'][code]['toggleUpDown'] if 'toggleUpDown' in self.modules['by_code'][
-                code] else 0
-            moving = "stop" if not "moving" in self.modules['by_code'][code] else self.modules['by_code'][code][
-                "moving"]
-            timeAutomatic = "on" if not "timeAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["timeAutomatic"]
-            dawnAutomatic = "on" if not "dawnAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["dawnAutomatic"]
-            duskAutomatic = "on" if not "duskAutomatic" in self.modules['by_code'][code] else \
-                self.modules['by_code'][code]["duskAutomatic"]
+            toggleUpDown = self.modules['by_code'][code]['toggleUpDown'+channel_suffix] \
+                if 'toggleUpDown'+channel_suffix in self.modules['by_code'][code] else 0
+            moving = "stop" if "moving"+channel_suffix not in self.modules['by_code'][code] else \
+                self.modules['by_code'][code]["moving"+channel_suffix]
+            timeAutomatic = "on" if "timeAutomatic"+channel_suffix not in self.modules['by_code'][code] else \
+                self.modules['by_code'][code]["timeAutomatic"+channel_suffix]
+            dawnAutomatic = "on" if "dawnAutomatic"+channel_suffix not in self.modules['by_code'][code] else \
+                self.modules['by_code'][code]["dawnAutomatic"+channel_suffix]
+            duskAutomatic = "on" if "duskAutomatic"+channel_suffix not in self.modules['by_code'][code] else \
+                self.modules['by_code'][code]["duskAutomatic"+channel_suffix]
 
             if moving != "stop":
                 if cmd in ('up', 'down', 'toggle'):
