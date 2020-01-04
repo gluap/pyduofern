@@ -325,11 +325,11 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     #        self.running = False
 
     @asyncio.coroutine
-    def command(self, *args):
+    def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
             self.recorder.flush()
-        yield from self.duofern_parser.set(*args)
+        yield from self.duofern_parser.set(*args, **kwargs)
 
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
@@ -564,11 +564,11 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.open()
         self.serial_connection.write(data_to_write)
 
-    def command(self, *args):
+    def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
             self.recorder.flush()
-        list(self.duofern_parser.set(*args))
+        list(self.duofern_parser.set(*args, **kwargs))
 
     @asyncio.coroutine
     def add_serial_and_send(self, msg):
