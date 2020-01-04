@@ -416,13 +416,14 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
             counter = 0
             for device in self.config['devices']:
                 # devices with id other than 6 characters
-                # are sub-devices of another device with 6 characters
+                # were previously sub-devices of another device with 6 characters
                 # (i.e. devices representing a single channel)
-                # and thus do not require SetPairs
-                if len(device['id']) == 6:
-                    hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
-                    yield from send_and_await_reply(self, hex_to_write, "SetPairs")
-                    yield from self.send(duoACK)
+                # but are no longer relevant
+                if len(device['id']) != 6:
+                    continue
+                hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
+                yield from send_and_await_reply(self, hex_to_write, "SetPairs")
+                yield from self.send(duoACK)
                 counter += 1
                 self.duofern_parser.add_device(device['id'], device['name'])
 
@@ -501,17 +502,19 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                 counter = 0
                 for device in self.config['devices']:
                     # devices with id other than 6 characters
-                    # are sub-devices of another device with 6 characters
+                    # were previously sub-devices of another device with 6 characters
                     # (i.e. devices representing a single channel)
-                    # and thus do not require SetPairs
-                    if len(device['id']) == 6:
-                        hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
-                        self._simple_write(hex_to_write)
-                        try:
-                            self._read_answer("SetPairs")
-                        except DuofernTimeoutException:  # pragma: no cover
-                            continue
-                        self._simple_write(duoACK)
+                    # but are no longer relevant
+                    if len(device['id']) != 6:
+                        continue
+
+                    hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
+                    self._simple_write(hex_to_write)
+                    try:
+                        self._read_answer("SetPairs")
+                    except DuofernTimeoutException:  # pragma: no cover
+                        continue
+                    self._simple_write(duoACK)
                     counter += 1
                     self.duofern_parser.add_device(device['id'], device['name'])
 
