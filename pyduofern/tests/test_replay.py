@@ -29,6 +29,7 @@ import os
 import re
 import tempfile
 import time
+import sys
 
 import pytest
 
@@ -160,8 +161,9 @@ def test_init_against_mocked_stick(event_loop, replayfile):
     def feedback_loop():
         while proto.transport.replay:
             yield
-            if time.time() - start_time > 3:
-                raise TimeoutError("Mock test should not take longer than 30 seconds, asynchronous loop must be stuck")
+            if time.time() - start_time > 3 and sys.gettrace() is None:
+                raise TimeoutError("Mock test should not take longer than 3 seconds, asynchronous loop must be stuck"
+                                   "Be aware this is not raised in debug mode.")
 
             if proto.transport.next_is_action():
                 asyncio.ensure_future(proto.transport.actions())
