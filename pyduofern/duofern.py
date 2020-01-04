@@ -121,7 +121,9 @@ class Duofern(object):
             channel_str = "{:02x}".format(channel)
             key = key + "_" + channel_str
             self.modules['by_code'][code]['channels'].add(channel_str)
-            self.modules['by_code'][code][key] = value
+
+        self.modules['by_code'][code][key] = value
+
         if self.changes_callback and trigger:
             self.changes_callback()
 
