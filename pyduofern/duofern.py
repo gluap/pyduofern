@@ -281,7 +281,7 @@ class Duofern(object):
                 self.update_state(code, "state", state, "1", channel=channel)
                 # readingsEndUpdate(hash, 1)
 
-                if channel2:
+                if channel2 is not None:
                     level = int(msg[20:20 + 2], 16) & 0x7F
                     modeChange = "on" if int(msg[20:20 + 2], 16) & 0x80 else "off"
                     sunMode = "on" if int(msg[12:12 + 2], 16) & 0x10 else "off"
