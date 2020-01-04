@@ -475,8 +475,11 @@ class Duofern(object):
                 modeChange = "on" if int(msg[22:22 + 2], 16) & 0x80 else "off"
 
                 state = level
-                state = "off" if (level == 0) else level
-                state = "on" if (level == 100) else level
+
+                if level == 0:
+                    state = "off"
+                if level == 100:
+                    state = "on"
 
                 # readingsBeginUpdate(hash)
                 self.update_state(code, "stairwellFunction", stairwellFunction, "1", channel=channel)
