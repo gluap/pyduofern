@@ -267,8 +267,10 @@ class Duofern(object):
                 stairwellTime = (int(msg[16:16 + 4], 16) & 0x7FFF) / 10
 
                 state = level
-                state = "off" if (level == 0) else level
-                state = "on" if (level == 100) else level
+                if level == 0:
+                    state = "off"
+                if level == 100:
+                    state = "on"
 
                 # readingsBeginUpdate(hash)
                 self.update_state(code, "sunMode", sunMode, "1", channel=channel)
@@ -303,17 +305,17 @@ class Duofern(object):
                         state = "on"
 
                     # readingsBeginUpdate(hash)
-                    self.update_state(code, "sunMode", sunMode, "1", channel=channel)
-                    self.update_state(code, "timeAutomatic", timerAuto, "1", channel=channel)
-                    self.update_state(code, "sunAutomatic", sunAuto, "1", channel=channel)
-                    self.update_state(code, "dawnAutomatic", dawnAuto, "1", channel=channel)
-                    self.update_state(code, "duskAutomatic", duskAuto, "1", channel=channel)
-                    self.update_state(code, "manualMode", manualMode, "1", channel=channel)
-                    self.update_state(code, "modeChange", modeChange, "1", channel=channel)
-                    self.update_state(code, "stairwellFunction", stairwellFunction, "1", channel=channel)
-                    self.update_state(code, "stairwellTime", stairwellTime, "1", channel=channel)
-                    self.update_state(code, "level", level, "1", channel=channel)
-                    self.update_state(code, "state", state, "1", channel=channel)
+                    self.update_state(code, "sunMode", sunMode, "1", channel=channel2)
+                    self.update_state(code, "timeAutomatic", timerAuto, "1", channel=channel2)
+                    self.update_state(code, "sunAutomatic", sunAuto, "1", channel=channel2)
+                    self.update_state(code, "dawnAutomatic", dawnAuto, "1", channel=channel2)
+                    self.update_state(code, "duskAutomatic", duskAuto, "1", channel=channel2)
+                    self.update_state(code, "manualMode", manualMode, "1", channel=channel2)
+                    self.update_state(code, "modeChange", modeChange, "1", channel=channel2)
+                    self.update_state(code, "stairwellFunction", stairwellFunction, "1", channel=channel2)
+                    self.update_state(code, "stairwellTime", stairwellTime, "1", channel=channel2)
+                    self.update_state(code, "level", level, "1", channel=channel2)
+                    self.update_state(code, "state", state, "1", channel=channel2)
                     # readingsEndUpdate(hash, 1)  # Notify is done by Dispatch
             elif format == "23":
                 pos = int(msg[22:22 + 2], 16) & 0x7F
