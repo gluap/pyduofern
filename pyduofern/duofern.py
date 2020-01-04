@@ -331,7 +331,7 @@ class Duofern(object):
                 tiltInVentPos = "on" if int(msg[8:8 + 2], 16) & 0x80 else "off"
                 tiltAfterMoveLevel = "on" if int(msg[8:8 + 2], 16) & 0x40 else "off"
                 tiltAfterStopDown = "on" if int(msg[10:10 + 2], 16) & 0x80 else "off"
-                module_definitionaultSlatPos = int(msg[10:10 + 2], 16) & 0x7F
+                defaultSlatPos = int(msg[10:10 + 2], 16) & 0x7F
                 slatRunTime = int(msg[8:8 + 2], 16) & 0x3F
                 slatPosition = int(msg[26:26 + 2], 16) & 0x7F
 
@@ -366,7 +366,7 @@ class Duofern(object):
                     self.update_state(code, "tiltInVentPos", tiltInVentPos, "1", channel=channel)
                     self.update_state(code, "tiltAfterMoveLevel", tiltAfterMoveLevel, "1", channel=channel)
                     self.update_state(code, "tiltAfterStopDown", tiltAfterStopDown, "1", channel=channel)
-                    self.update_state(code, "module_definitionaultSlatPos", module_definitionaultSlatPos, "1", channel=channel)
+                    self.update_state(code, "defaultSlatPos", defaultSlatPos, "1", channel=channel)
                     self.update_state(code, "slatRunTime", slatRunTime, "1", channel=channel)
                     self.update_state(code, "slatPosition", slatPosition, "1", channel=channel)
                 else:
@@ -374,7 +374,7 @@ class Duofern(object):
                     self.delete_state(code, 'tiltInVentPos',channel=channel)
                     self.delete_state(code, 'tiltAfterMoveLevel',channel=channel)
                     self.delete_state(code, 'tiltAfterStopDown',channel=channel)
-                    self.delete_state(code, 'module_definitionaultSlatPos',channel=channel)
+                    self.delete_state(code, 'defaultSlatPos',channel=channel)
                     self.delete_state(code, 'slatRunTime',channel=channel)
                     self.delete_state(code, 'slatPosition',channel=channel)
 
