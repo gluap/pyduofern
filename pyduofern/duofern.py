@@ -370,13 +370,13 @@ class Duofern(object):
                     self.update_state(code, "slatRunTime", slatRunTime, "1", channel=channel)
                     self.update_state(code, "slatPosition", slatPosition, "1", channel=channel)
                 else:
-                    self.delete_state(code, 'tiltInSunPos',channel=channel)
-                    self.delete_state(code, 'tiltInVentPos',channel=channel)
-                    self.delete_state(code, 'tiltAfterMoveLevel',channel=channel)
-                    self.delete_state(code, 'tiltAfterStopDown',channel=channel)
-                    self.delete_state(code, 'defaultSlatPos',channel=channel)
-                    self.delete_state(code, 'slatRunTime',channel=channel)
-                    self.delete_state(code, 'slatPosition',channel=channel)
+                    self.delete_state(code, 'tiltInSunPos', channel=channel)
+                    self.delete_state(code, 'tiltInVentPos', channel=channel)
+                    self.delete_state(code, 'tiltAfterMoveLevel', channel=channel)
+                    self.delete_state(code, 'tiltAfterStopDown', channel=channel)
+                    self.delete_state(code, 'defaultSlatPos', channel=channel)
+                    self.delete_state(code, 'slatRunTime', channel=channel)
+                    self.delete_state(code, 'slatPosition', channel=channel)
 
                 self.update_state(code, "moving", "stop", "1", channel=channel)
                 self.update_state(code, "state", state, "1", channel=channel)
@@ -952,7 +952,6 @@ class Duofern(object):
             timer = "00"
             buf = duoCommand
             command = None
-
 
             if 'noArg' in commands[cmd]:
                 if (arg and (arg == "timer")):
