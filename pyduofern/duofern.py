@@ -134,6 +134,16 @@ class Duofern(object):
         if key in self.modules['by_code'][code]:
             del self.modules['by_code'][code][key]
 
+    def get_state(self, code, key, channel=None, default=None):
+        if channel is not None:
+            channel_str = "{:02x}".format(channel)
+            key = key + "_" + channel_str
+
+        if not key in self.modules['by_code'][code]:
+            return default
+
+        return self.modules['by_code'][code][key]
+
     def parse(self, msg):
         code = msg[30:36]
         if msg[0:2] == '81':
