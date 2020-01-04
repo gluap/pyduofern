@@ -172,7 +172,8 @@ Changelog
   with multiple actor channels which was rather buggy add a ``channel`` parameter to the
   respective functions in pyduofern.duofern.Duofern() which allows to handle channels in
   a consistent manner. See discussion in https://github.com/gluap/pyduofern/pull/9 .
-  For multichannel devices each extra channel is listed in in Duofern().modules['by_code'][code]['channels']
+  For each device available channels are listed in in Duofern().modules['by_code'][code]['channels'].
+  The default channel available for all devices is "None".
 
 **0.25.2**
 - try to fix https://github.com/gluap/pyduofern/issues/2
