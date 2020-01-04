@@ -98,7 +98,7 @@ class Duofern(object):
         if name is None:
             name = len(self.modules['by_code'])
         logger.debug("adding {}".format(code))
-        self.modules['by_code'][code] = {'name': name}
+        self.modules['by_code'][code] = {'name': name, 'channels': set()}
 
     def del_device(self, code, name=None):
         if name is None:
@@ -120,8 +120,6 @@ class Duofern(object):
         if channel is not None:
             channel_str = "{:02x}".format(channel)
             key = key + "_" + channel_str
-            if 'channels' not in self.modules['by_code'][code]:
-                self.modules['by_code'][code]['channels'] = set()
             self.modules['by_code'][code]['channels'].add(channel_str)
             self.modules['by_code'][code][key] = value
         if self.changes_callback and trigger:
