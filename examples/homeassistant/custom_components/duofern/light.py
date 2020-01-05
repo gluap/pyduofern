@@ -31,20 +31,36 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     stick = hass.data["duofern"]['stick']
 
     # Add devices
-    to_add = [DuofernLight(device['id'], device['name'], stick, hass) for device in stick.config['devices'] if
-              (device['id'].startswith('46') or (device['id'].startswith('43') and len(device['id']) == 8)) and not device['id'] in hass.data[DOMAIN]['devices'].keys()]
-    add_devices(to_add)
+    for device in stick.config['devices']:
+        if device['id'].startswith('46') or device['id'].startswith('48'):
+            if device['id'] in hass.data[DOMAIN]['devices'].keys():
+                continue
+            add_devices([DuofernLight(device['id'], device['name'], stick, hass)])
 
+        if device['id'].startswith('43'):
+            for channel in [1,2]:
+                chanNo = "{:02x}".format(channel)
+                if device['id']+chanNo in hass.data[DOMAIN]['devices'].keys():
+                    continue
+                add_devices([DuofernLight(device['id'], device['name'], stick, hass, channel=channel)])
 
 class DuofernLight(Light):
-    def __init__(self, id, desc, stick, hass):
-        """Initialize the shutter."""
-        self._id = id
+    def __init__(self, code, desc, stick, hass, channel=None):
+        """Initialize the light."""
+        self._code = code
+        self._id = code
         self._name = desc
+
+        if channel:
+          chanNo = "{:02x}".format(channel)
+          self._id += chanNo
+          self._name += chanNo
+
         self._state = None
         self._brightness = None
         self._stick = stick
-        hass.data[DOMAIN]['devices'][id] = self
+        self._channel = channel
+        hass.data[DOMAIN]['devices'][self._id] = self
 
     @property
     def name(self):
@@ -53,8 +69,9 @@ class DuofernLight(Light):
     @property
     def is_on(self):
         try:
-            _LOGGER.info(self._stick.duofern_parser.modules['by_code'][self._id])
-            return self._stick.duofern_parser.modules['by_code'][self._id]['state'] == "on"
+            _LOGGER.info(self._stick.duofern_parser.modules['by_code'][self._code])
+            state = self._stick.duofern_parser.get_state(self._code, 'state', channel=self._channel)
+            return state == "on"
         except KeyError:
             return None
 
@@ -63,14 +80,14 @@ class DuofernLight(Light):
         return self._id
 
     def turn_on(self):
-        self._stick.command(self._id, "on")
-        # this is a hotfix because currently the state is not correctly detected from duofern
-        self._stick.duofern_parser.modules['by_code'][self._id]['state'] = "on"
+        self._stick.command(self._code, "on", channel=self._channel)
+        # this is a hotfix because currently the state is detected with delay from duofern
+        self._stick.duofern_parser.update_state(self._code, 'state', "on", channel=self._channel)
 
     def turn_off(self):
-        self._stick.command(self._id, "off")
-        # this is a hotfix because currently the state is not correctly detected from duofern
-        self._stick.duofern_parser.modules['by_code'][self._id]['state'] = 0
+        self._stick.command(self._code, "off", channel=self._channel)
+        # this is a hotfix because currently the state is detected with delay from duofern
+        self._stick.duofern_parser.update_state(self._code, 'state', "off", channel=self._channel)
 
     def update(self):
         pass
