@@ -10,6 +10,7 @@ The following is setup procedure with hassio
 - install hassio
 - via the GUI enable the `SSH Server addon <https://www.home-assistant.io/addons/ssh/>`_
 - login via ssh
+- connect the stick
 - download the pyduofern repo via git, copy the custom component and add duofern to your config by running::
 
      git clone https://github.com/gluap/pyduofern/
@@ -20,8 +21,9 @@ The following is setup procedure with hassio
      # if you are migrating from FHEM: Skip the "6f" from the beginning of the code,
      # only use the last 4 characters
      echo "  code: ffff" >> /config/configuration.yaml
+     echo -n "  serial_port: " >> /config/configuration.yaml && ls /dev/serial/by-id/usb-Rademacher_DuoFern* >> /config/configuration.yaml
 
-- connect the stick and restart homeassistant via the GUI
+- restart homeassistant via the GUI
 - stick should stop blinking once homeassistant initializes it
 - devices previously paired with the coded should be auto-detected, if not call the service ``duofern.sync_devices`` (see below).
 - to pair a device call the service ``duofern.start_pairing`` via the gui and do the pairing motions from the manual of the device
