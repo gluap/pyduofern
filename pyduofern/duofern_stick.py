@@ -325,11 +325,11 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     #        self.running = False
 
     @asyncio.coroutine
-    def command(self, *args):
+    def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
             self.recorder.flush()
-        yield from self.duofern_parser.set(*args)
+        yield from self.duofern_parser.set(*args, **kwargs)
 
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
@@ -415,6 +415,12 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         if 'devices' in self.config and self.config['devices']:
             counter = 0
             for device in self.config['devices']:
+                # devices with id other than 6 characters
+                # were previously sub-devices of another device with 6 characters
+                # (i.e. devices representing a single channel)
+                # but are no longer relevant
+                if len(device['id']) != 6:
+                    continue
                 hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
                 yield from send_and_await_reply(self, hex_to_write, "SetPairs")
                 yield from self.send(duoACK)
@@ -495,6 +501,13 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             if "devices" in self.config:
                 counter = 0
                 for device in self.config['devices']:
+                    # devices with id other than 6 characters
+                    # were previously sub-devices of another device with 6 characters
+                    # (i.e. devices representing a single channel)
+                    # but are no longer relevant
+                    if len(device['id']) != 6:
+                        continue
+
                     hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
                     self._simple_write(hex_to_write)
                     try:
@@ -551,11 +564,11 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.open()
         self.serial_connection.write(data_to_write)
 
-    def command(self, *args):
+    def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {}\n".format(args))
+            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
             self.recorder.flush()
-        list(self.duofern_parser.set(*args))
+        list(self.duofern_parser.set(*args, **kwargs))
 
     @asyncio.coroutine
     def add_serial_and_send(self, msg):

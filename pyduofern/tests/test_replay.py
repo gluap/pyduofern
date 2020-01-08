@@ -29,6 +29,8 @@ import os
 import re
 import tempfile
 import time
+import sys
+from ast import literal_eval
 
 import pytest
 
@@ -116,10 +118,10 @@ class TransportMock:
     @asyncio.coroutine
     def actions(self):
         while self.next_is_action():
-            command_args = self.next_line()[1:]
-            command_args_ = [re.sub("[,()']?", "", arg) for arg in command_args]
-            command_args_[1:] = [int(arg) if re.match("^[0-9]+$", arg) else arg for arg in command_args_[1:]]
-            yield from self.proto.command(*command_args_)
+            command_args = " ".join(self.next_line()[1:])
+            args_and_kwargs = re.match(r"(\([^\)]+\)).*({[^}]+})", command_args)
+            args, kwargs = args_and_kwargs.groups()
+            yield from self.proto.command(*literal_eval(args),**literal_eval(kwargs))
 
     def check_if_next_matches(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
@@ -160,8 +162,9 @@ def test_init_against_mocked_stick(event_loop, replayfile):
     def feedback_loop():
         while proto.transport.replay:
             yield
-            if time.time() - start_time > 3:
-                raise TimeoutError("Mock test should not take longer than 30 seconds, asynchronous loop must be stuck")
+            if time.time() - start_time > 3 and sys.gettrace() is None:
+                raise TimeoutError("Mock test should not take longer than 3 seconds, asynchronous loop must be stuck"
+                                   "Be aware this is not raised in debug mode.")
 
             if proto.transport.next_is_action():
                 asyncio.ensure_future(proto.transport.actions())
