@@ -1,4 +1,5 @@
 import logging
+import math
 
 # from homeassistant.const import 'serial_port', 'config_file', 'code'
 import homeassistant.helpers.config_validation as cv
@@ -6,7 +7,7 @@ import voluptuous as vol
 # found advice in the homeassistant creating components manual
 # https://home-assistant.io/developers/creating_components/
 # Import the device class from the component that you want to support
-from homeassistant.components.light import Light, PLATFORM_SCHEMA
+from homeassistant.components.light import Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS
 
 # Home Assistant depends on 3rd party packages for API specific code.
 
@@ -57,7 +58,6 @@ class DuofernLight(Light):
           self._name += chanNo
 
         self._state = None
-        self._brightness = None
         self._stick = stick
         self._channel = channel
         hass.data[DOMAIN]['devices'][self._id] = self
@@ -69,9 +69,8 @@ class DuofernLight(Light):
     @property
     def is_on(self):
         try:
-            _LOGGER.info(self._stick.duofern_parser.modules['by_code'][self._code])
             state = self._stick.duofern_parser.get_state(self._code, 'state', channel=self._channel)
-            return state == "on"
+            return state != "off"
         except KeyError:
             return None
 
@@ -79,10 +78,40 @@ class DuofernLight(Light):
     def unique_id(self):
         return self._id
 
-    def turn_on(self):
-        self._stick.command(self._code, "on", channel=self._channel)
-        # this is a hotfix because currently the state is detected with delay from duofern
-        self._stick.duofern_parser.update_state(self._code, 'state', "on", channel=self._channel)
+    @property                
+    def brightness(self):
+        if self._code.startswith("48"):
+            level = self._stick.duofern_parser.get_state(self._code, 'level', channel=self._channel)
+            if level == None:
+                return None
+
+            return math.ceil(int(level)/100.0*255)
+        else:
+            return None
+
+    @property
+    def supported_features(self):
+        if self._code.startswith("48"):
+            return SUPPORT_BRIGHTNESS
+        else:
+            return 0
+
+    def turn_on(self,**kwargs):
+        if self._code.startswith("48"):
+            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            level = math.ceil(brightness/255.0*100)
+            if ATTR_BRIGHTNESS in kwargs:
+                self._stick.command(self._code, "level", level, channel=self._channel)
+            else:
+                self._stick.command(self._code, "on", channel=self._channel) # dim slowly up
+
+            # this is a hotfix because currently the state is detected with delay from duofern
+            self._stick.duofern_parser.update_state(self._code, 'level', str(level), channel=self._channel)
+            self._stick.duofern_parser.update_state(self._code, 'state', str(level), channel=self._channel)
+        else:
+            self._stick.command(self._code, "on", channel=self._channel)
+            # this is a hotfix because currently the state is detected with delay from duofern
+            self._stick.duofern_parser.update_state(self._code, 'state', "on", channel=self._channel)
 
     def turn_off(self):
         self._stick.command(self._code, "off", channel=self._channel)
