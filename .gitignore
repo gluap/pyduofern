@@ -1,7 +1,6 @@
 *.pm
 *.pyc
 **/coverage/*
-*.pm
 build/**
 coverage/**
 dist/**
@@ -11,4 +10,4 @@ dist/**
 **/du*ern.json
 **/mysensors.json
 .pypirc
-.coverage
+venv/**
