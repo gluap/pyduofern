@@ -7,7 +7,7 @@ import voluptuous as vol
 # found advice in the homeassistant creating components manual
 # https://home-assistant.io/developers/creating_components/
 # Import the device class from the component that you want to support
-from homeassistant.components.light import Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS
+from homeassistant.components.light import LightEntity, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS
 
 # Home Assistant depends on 3rd party packages for API specific code.
 
@@ -45,7 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     continue
                 add_devices([DuofernLight(device['id'], device['name'], stick, hass, channel=channel)])
 
-class DuofernLight(Light):
+
+class DuofernLight(LightEntity):
     def __init__(self, code, desc, stick, hass, channel=None):
         """Initialize the light."""
         self._code = code
