@@ -4,7 +4,7 @@ import logging
 # found advice in the homeassistant creating components manual
 # https://home-assistant.io/developers/creating_components/
 # Import the device class from the component that you want to support
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from .const import DOMAIN
 
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(to_add)
 
 
-class DuofernShutter(CoverDevice):
+class DuofernShutter(CoverEntity):
     """Representation of Duofern cover type device."""
 
     def __init__(self, id, desc, stick, hass):
