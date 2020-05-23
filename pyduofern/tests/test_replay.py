@@ -108,7 +108,7 @@ class TransportMock:
             if self.next_is_received():
                 line = self.next_line()[1].strip()
                 try:
-                    await self.proto.data_received(bytearray.fromhex(line))
+                    self.proto.data_received(bytearray.fromhex(line))
                     self.finished_actions.append("OK")
                 except Exception as exc:  # pragma: no cover
                     self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")

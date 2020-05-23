@@ -167,6 +167,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.31.0**
+
+- add mqtt connector
+
 **0.30.0**
 
 - **breaking change**: instead of creating multiple devices for single physical devices with multiple actor channels which was rather buggy add a ``channel`` parameter to the respective functions inpyduofern.duofern.Duofern() which allows to handle channels in a consistent manner. See discussion in https://github.com/gluap/pyduofern/pull/9 . For each device available channels are listed in in Duofern().modules['by_code'][code]['channels']. The default channel available for all devices is ``None``, otherwise an ``int`` is expected.

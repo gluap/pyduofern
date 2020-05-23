@@ -10,7 +10,7 @@ setup(name='pyduofern',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.6',
       ],
 
       url='https://github.com/gluap/pyduofern',
@@ -21,7 +21,7 @@ setup(name='pyduofern',
       packages=['pyduofern'],
 
       install_requires=[
-          'pyserial', 'pyserial-asyncio'
+          'pyserial', 'pyserial-asyncio', 'asyncio-mqtt>=0.3.0', 'ConfigArgParse'
       ],
 
       zip_safe=False,

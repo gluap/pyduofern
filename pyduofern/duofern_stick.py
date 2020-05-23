@@ -343,7 +343,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.last_packet = time.time()
         self._ready.set()
 
-    async def data_received(self, data):
+    def data_received(self, data):
         if self.last_packet + 0.05 < time.time() and not hasattr(self.transport, 'unittesting'):
             self.buffer = bytearray(b'')
         self.last_packet = time.time()
@@ -353,7 +353,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
                 self.recorder.write("received {}\n".format(hex(self.buffer[0:22])))
                 self.recorder.flush()
             if not hex(self.buffer[0:22]) == duoACK:
-                await self.send(duoACK)
+                asyncio.ensure_future(self.send(duoACK))
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:

@@ -124,7 +124,7 @@ class Duofern(object):
 
         self.modules['by_code'][code][key] = value
 
-        if self.changes_callback and trigger:
+        if self.changes_callback is not None:
             self.changes_callback()
 
     def delete_state(self, code, key, channel: int = None):
@@ -716,12 +716,11 @@ class Duofern(object):
 
         return name
 
-    @asyncio.coroutine
-    def send(self, cmd):
-        yield from self.send_hook(cmd)
+    async def send(self, cmd):
+        await self.send_hook(cmd)
 
-    @asyncio.coroutine
-    def set(self, code, cmd, *args, channel: int = None):
+
+    async def set(self, code, cmd, *args, channel: int = None):
         # my (hash, @a) = @_
         # b = @a
 
@@ -775,7 +774,7 @@ class Duofern(object):
             buf = duoStatusRequest
             buf = buf.replace("nn", commandsStatus[cmd])
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
+            await self.send(buf)
             return None
 
         elif cmd == "clear":
@@ -783,7 +782,7 @@ class Duofern(object):
             for key in keys:
                 if key != 'name':
                     self.modules['by_code'][code].__delitem__(key)
-            return None
+            return
             # cH = (hash)
             # delete _->{READINGS} foreach (@cH)
             # return undef
@@ -791,8 +790,8 @@ class Duofern(object):
         elif cmd == "getConfig":
             buf = duoWeatherConfig
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
-            return None
+            await self.send(buf)
+            return
 
         elif cmd == "writeConfig":
             for x in range(0, 8):
@@ -804,13 +803,13 @@ class Duofern(object):
                 buf = buf.replace("yyyyyy", code)
                 buf = buf.replace("rr", reg)
                 buf = buf.replace("nnnnnnnnnnnnnnnnnnnn", regV)
-                yield from self.send(buf)
+                await self.send(buf)
 
             if "configModified" in self.modules['by_code'][code]:
                 self.modules['by_code'][code].__delitem__("configModified")
 
             # delete hash->{READINGS}{configModified}
-            return None
+            return
 
         elif cmd == "time":
             buf = duoSetTime
@@ -826,8 +825,8 @@ class Duofern(object):
             buf = buf.replace("mmmmmmmm", m)
             buf = buf.replace("nnnnnn", n)
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
-            return None
+            await self.send(buf)
+            return
 
         elif cmd in wCmds:
             logger.error("this has not been implemented yet")
@@ -1113,7 +1112,7 @@ class Duofern(object):
             buf = buf.replace("wwww", argW)
             buf = buf.replace("kk", chanNo)
             logger.debug("trying to send {}".format(buf))
-            yield from self.send(buf)
+            await self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
 
