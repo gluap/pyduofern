@@ -102,26 +102,24 @@ class TransportMock:
 
     #  yield from asyncio.ensure_future(self.receive())
 
-    @asyncio.coroutine
-    def receive_loop(self):
+    async def receive_loop(self):
         while self.replay:
-            yield
+            await asyncio.sleep(0)
             if self.next_is_received():
                 line = self.next_line()[1].strip()
                 try:
-                    yield self.proto.data_received(bytearray.fromhex(line))
+                    await self.proto.data_received(bytearray.fromhex(line))
                     self.finished_actions.append("OK")
                 except Exception as exc:  # pragma: no cover
                     self.finished_actions.append("EXCEPTION WHILE REPLAYING RECIEVED MESSAGE")
                     logger.exception("", exc_info=True)
 
-    @asyncio.coroutine
-    def actions(self):
+    async def actions(self):
         while self.next_is_action():
             command_args = " ".join(self.next_line()[1:])
             args_and_kwargs = re.match(r"(\([^\)]+\)).*({[^}]+})", command_args)
             args, kwargs = args_and_kwargs.groups()
-            yield from self.proto.command(*literal_eval(args),**literal_eval(kwargs))
+            await self.proto.command(*literal_eval(args),**literal_eval(kwargs))
 
     def check_if_next_matches(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
@@ -138,7 +136,7 @@ class TransportMock:
 
 @pytest.mark.parametrize('replayfile', list_replays())
 @pytest.mark.asyncio
-def test_init_against_mocked_stick(event_loop, replayfile):
+async def test_init_against_mocked_stick(event_loop, replayfile):
     proto = DuofernStickAsync(event_loop, system_code="ffff", config_file_json=tempfile.mktemp(), recording=False)
     proto.transport = TransportMock(proto, replayfile)
     proto._ready = asyncio.Event()
@@ -147,21 +145,23 @@ def test_init_against_mocked_stick(event_loop, replayfile):
 
     proto._ready.set()
 
-    result = yield from init_
+    await init_
+
+    result = await init_
 
     assert ["OK"] * len(
         proto.transport.finished_actions) == proto.transport.finished_actions, "some sends did not match" \
                                                                                "the recording"
 
-    asyncio.wait_for(proto.available, 666666)
+    await asyncio.wait_for(proto.available, 666666)
 
     # if proto.transport.next_is_sent():
     #    proto.transport.write(bytearray.fromhex(proto.transport.replay[-1][1].strip()))
     start_time = time.time()
-    @asyncio.coroutine
-    def feedback_loop():
+
+    async def feedback_loop():
         while proto.transport.replay:
-            yield
+            await asyncio.sleep(0)
             if time.time() - start_time > 3 and sys.gettrace() is None:
                 raise TimeoutError("Mock test should not take longer than 3 seconds, asynchronous loop must be stuck"
                                    "Be aware this is not raised in debug mode.")
@@ -170,7 +170,7 @@ def test_init_against_mocked_stick(event_loop, replayfile):
                 asyncio.ensure_future(proto.transport.actions())
                 print("bla")
 
-    feedbackloop = yield from asyncio.ensure_future(feedback_loop())
+    feedbackloop = await asyncio.ensure_future(feedback_loop())
     proto.transport.receiveloop.cancel()
 
     proto.send_loop.cancel()

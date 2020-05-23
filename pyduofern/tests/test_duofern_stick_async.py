@@ -62,31 +62,12 @@ class TransportMock:
         self.proto = proto
         self.unittesting = True
 
-    def write(self, data):
+    async def write(self, data):
         logger.warning("writing {} detected by mock writer".format(data))
         if data != bytearray.fromhex(duoACK):
-            self.proto.data_received(bytearray.fromhex(duoACK))
+            await self.proto.data_received(bytearray.fromhex(duoACK))
         self.proto._ready.set()
 
-
-def test_init_against_mocked_stick(looproto):
-    loop, proto = looproto
-    proto.transport = TransportMock(proto)
-    proto._ready = asyncio.Event()
-
-    initialization = asyncio.ensure_future(proto.handshake())
-
-    proto._ready.set()
-
-    def cb(a):
-        logging.info(a)
-
-    proto.available.add_done_callback(cb)
-
-    loop.run_until_complete(initialization)
-
-    for task in asyncio.Task.all_tasks():
-        task.cancel()
 
 
 def test_raises_when_run_without_code():
