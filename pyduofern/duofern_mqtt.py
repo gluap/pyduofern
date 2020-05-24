@@ -9,7 +9,6 @@ from distutils.util import strtobool
 
 from asyncio_mqtt import Client
 
-
 from pyduofern.duofern_stick import DuofernStickAsync
 
 logger = logging.getLogger(__name__)
@@ -29,12 +28,27 @@ def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
 
-async def receive_loop(duo, mqtt_client, updates_received: asyncio.Event, once=False):
+def control_device(client, userdata, msg):
+    print(msg.topic + " " + str(msg.payload))
+    pass
+
+
+async def updates_to_mqtt(duo, mqtt_client, mqtt_prefix):
+    for device_id, values in duo.items():
+        for value, data in values.items():
+            try:
+                await mqtt_client.publish(f"{mqtt_prefix}/pyduofern/state/{device_id}/{value}", data)
+            except:
+                logger.exception(f"problem logging {value}")
+
+
+async def receive_loop(duo, mqtt_client, updates_received: asyncio.Event, mqtt_prefix="", once=False):
     while True:
         await updates_received.wait()
+        await updates_to_mqtt(duo.duofern_parser.modules['by_code'], mqtt_client, mqtt_prefix)
         updates_received.clear()
-        logger.info("received event from duofern")
-        logger.info(duo.__dict__)
+        if once:
+            break
 
 
 def main(arguments=None):
@@ -55,6 +69,7 @@ async def _main(arguments=None):
     )
 
     parser.add_argument("--mqtt_server", default="192.168.1.220", help="mqtt server")
+    parser.add_argument("--mqtt_prefix", default="", help="mqtt custom prefix")
     parser.add_argument("--mqtt_port", default=1883, type=int, help="mqtt port")
     parser.add_argument("--mqtt_password", default=None, help="mqtt password")
     parser.add_argument("--mqtt_user", default=None, help="mqtt user")
@@ -73,10 +88,14 @@ async def _main(arguments=None):
 
     loop = asyncio.get_running_loop()
     print(args.serial_port)
-    transport, proto = await serial_asyncio.create_serial_connection(loop,                                                                lambda: DuofernStickAsync(loop, system_code=args.system_code, ephemeral=True, changes_callback=notify_change), args.serial_port, baudrate=115200)
+    transport, proto = await serial_asyncio.create_serial_connection(loop, lambda: DuofernStickAsync(loop,
+                                                                                                     system_code=args.system_code,
+                                                                                                     ephemeral=True,
+                                                                                                     changes_callback=notify_change),
+                                                                     args.serial_port, baudrate=115200)
 
     initialization = await proto.handshake()
-   # f, proto = await duo
+    # f, proto = await duo
 
     logging.basicConfig(level=args.loglevel.upper())
 
@@ -110,11 +129,13 @@ async def _main(arguments=None):
         async with Client(args.mqtt_server, port=args.mqtt_port, logger=logger, username=args.mqtt_user,
                           password=args.mqtt_password) as client:
 
-            await client.subscribe('/pyduofern/control/#')
-            asyncio.create_task(handle_control(client, pair, "/pyduofern/control/start_pairing"))
-            asyncio.create_task(handle_control(client, unpair, "/pyduofern/control/start_unpairing"))
+            await client.subscribe('pyduofern/control/#')
+            asyncio.create_task(handle_control(client, pair, "pyduofern/control/start_pairing"))
+            asyncio.create_task(handle_control(client, unpair, "pyduofern/control/start_unpairing"))
+            asyncio.create_task(handle_control(client, control_device, "pyduofern/device/+/control/#"))
 
-            await receive_loop(proto, mqtt_client=client, updates_received=change_event, once=False, )
+            await receive_loop(proto, mqtt_client=client, updates_received=change_event, mqtt_prefix=args.mqtt_prefix,
+                               once=False)
 
     else:
         pass

@@ -736,38 +736,7 @@ class Duofern(object):
 
         # sets
 
-        if code[0:2] == "49":
-            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsRolloTube)
-        if code[0:2] in ("42", "4b", "4c", "70"):
-            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsTroll, {"blindsMode:on,off": ""})
-        if code[0:2] == "47":
-            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsTroll)
-        if code[0:2] in ("40", "41", "61"):
-            sets = merge_dicts(setsBasic, setsDefaultRollerShutter)  # if (code =~ /^(40|41|61)..../)
-        if code[0:2] == "69":
-            sets = merge_dicts(setsBasic, setsUmweltsensor)  # if (code =~ /^69..../)
-        if code[0:2] == "69" and len(code) >= 8 and code[6:8] == "00":
-            sets = merge_dicts(setsUmweltsensor00)  # if (code =~ /^69....00/)
-        if code[0:2] == "69" and len(code) >= 8 and code[6:8] == "01":
-            sets = merge_dicts(setsDefaultRollerShutter, setsUmweltsensor01)  # if (code =~ /^69....01/)
-        if code[0:2] == "43" and len(code) >= 8 and code[6:8] in ("01", "02"):
-            sets = merge_dicts(*setsSwitchActor)  # if (code =~ /^43....(01|02)/)
-        if code[0:2] in ("43", "65", "74"):
-            sets = merge_dicts(setsBasic, {"getStatus:noArg": ""})  # if (code =~ /^(43|65|74)..../)
-        if code[0:2] in ("46", "71"):
-            sets = merge_dicts(setsBasic, setsSwitchActor)  # if (code =~ /^(46|71)..../)
-        if code[0:2] == "4e":
-            sets = merge_dicts(setsBasic, setsSX5)  # if (code =~ /^4E..../)
-        if code[0:2] == "48":
-            sets = merge_dicts(setsBasic, setsDimmer)  # if (code =~ /^48..../)
-        if code[0:2] == "73":
-            sets = merge_dicts(setsBasic, setsThermostat)  # if (code =~ /^73..../)
-        if code[0:2] in ("65", "74") and len(code) >= 8 and code[6:8] == "01":
-            sets = merge_dicts(setsSwitchActor)  # if (code =~ /^(65|74)....01/)
-
-        blindsMode = "off" if not "blindsMode" in self.modules['by_code'][code] else self.modules['by_code'][code]
-        if (blindsMode == "on"):
-            sets = merge_dicts(sets, setsBlinds)
+        sets = await self.commands_for_device(code)
 
         logger.debug(sets.keys())  # join(" ", sort keys sets)
         if cmd in commandsStatus:
@@ -1118,6 +1087,40 @@ class Duofern(object):
 
         else:
             raise Exception("command {} not found".format(cmd))
+
+    async def commands_for_device(self, code):
+        if code[0:2] == "49":
+            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsRolloTube)
+        if code[0:2] in ("42", "4b", "4c", "70"):
+            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsTroll, {"blindsMode:on,off": ""})
+        if code[0:2] == "47":
+            sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsTroll)
+        if code[0:2] in ("40", "41", "61"):
+            sets = merge_dicts(setsBasic, setsDefaultRollerShutter)  # if (code =~ /^(40|41|61)..../)
+        if code[0:2] == "69":
+            sets = merge_dicts(setsBasic, setsUmweltsensor)  # if (code =~ /^69..../)
+        if code[0:2] == "69" and len(code) >= 8 and code[6:8] == "00":
+            sets = merge_dicts(setsUmweltsensor00)  # if (code =~ /^69....00/)
+        if code[0:2] == "69" and len(code) >= 8 and code[6:8] == "01":
+            sets = merge_dicts(setsDefaultRollerShutter, setsUmweltsensor01)  # if (code =~ /^69....01/)
+        if code[0:2] == "43" and len(code) >= 8 and code[6:8] in ("01", "02"):
+            sets = merge_dicts(*setsSwitchActor)  # if (code =~ /^43....(01|02)/)
+        if code[0:2] in ("43", "65", "74"):
+            sets = merge_dicts(setsBasic, {"getStatus:noArg": ""})  # if (code =~ /^(43|65|74)..../)
+        if code[0:2] in ("46", "71"):
+            sets = merge_dicts(setsBasic, setsSwitchActor)  # if (code =~ /^(46|71)..../)
+        if code[0:2] == "4e":
+            sets = merge_dicts(setsBasic, setsSX5)  # if (code =~ /^4E..../)
+        if code[0:2] == "48":
+            sets = merge_dicts(setsBasic, setsDimmer)  # if (code =~ /^48..../)
+        if code[0:2] == "73":
+            sets = merge_dicts(setsBasic, setsThermostat)  # if (code =~ /^73..../)
+        if code[0:2] in ("65", "74") and len(code) >= 8 and code[6:8] == "01":
+            sets = merge_dicts(setsSwitchActor)  # if (code =~ /^(65|74)....01/)
+        blindsMode = "off" if not "blindsMode" in self.modules['by_code'][code] else self.modules['by_code'][code]
+        if (blindsMode == "on"):
+            sets = merge_dicts(sets, setsBlinds)
+        return sets
 
 
 # return SetExtensions(hash, list, @b)
