@@ -28,18 +28,25 @@ def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
 
-def control_device(client, userdata, msg):
-    print(msg.topic + " " + str(msg.payload))
-    pass
+async def control_device(client, msg):
+    topic = msg.topic.split("/")
+    ci=topic.index("pyduofern")
+    device_id = topic[ci+3]
+    command = topic[ci+4]
+    logger.info(f"received {command} for device {device_id} arg {msg.payload}")
+
 
 
 async def updates_to_mqtt(duo, mqtt_client, mqtt_prefix):
     for device_id, values in duo.items():
         for value, data in values.items():
             try:
-                await mqtt_client.publish(f"{mqtt_prefix}/pyduofern/state/{device_id}/{value}", data)
+                if not isinstance(data,(list,set)):
+                    await mqtt_client.publish(f"{mqtt_prefix}pyduofern/state/{device_id}/{value}", data)
+                else:
+                    await mqtt_client.publish(f"{mqtt_prefix}pyduofern/state/{device_id}/{value}", ", ".join(str(i) for i in data))
             except:
-                logger.exception(f"problem logging {value}")
+                logger.exception(f"problem logging {value}, {data}")
 
 
 async def receive_loop(duo, mqtt_client, updates_received: asyncio.Event, mqtt_prefix="", once=False):
@@ -84,7 +91,6 @@ async def _main(arguments=None):
 
     def notify_change():
         change_event.set()
-        logger.info("sending event")
 
     loop = asyncio.get_running_loop()
     print(args.serial_port)
@@ -125,16 +131,28 @@ async def _main(arguments=None):
                 except ValueError:
                     logger.warning(f"ignoring incompatible value {msg} for switching")
 
+    async def handle_command(client, control, path):
+        async with client.filtered_messages(path) as messages:
+            async for msg in messages:
+                logger.info(f"control message received {msg}")
+                try:
+                    await control(client, msg)
+                except ValueError:
+                    logger.warning(f"ignoring incompatible value {msg} for switching")
+
     if args.mqtt_server is not None:
         async with Client(args.mqtt_server, port=args.mqtt_port, logger=logger, username=args.mqtt_user,
                           password=args.mqtt_password) as client:
+            if len(args.mqtt_prefix)>0:
+                mqtt_prefix = f"{args.mqtt_prefix}/"
+            else:
+                mqtt_prefix = ""
+            await client.subscribe(f'{mqtt_prefix}pyduofern/control/#')
+            asyncio.create_task(handle_control(client, pair, f"{mqtt_prefix}pyduofern/control/pairing"))
+            asyncio.create_task(handle_control(client, unpair, f"{mqtt_prefix}pyduofern/control/pairing"))
+            asyncio.create_task(handle_command(client, control_device, f"{mqtt_prefix}pyduofern/control/device/#"))
 
-            await client.subscribe('pyduofern/control/#')
-            asyncio.create_task(handle_control(client, pair, "pyduofern/control/start_pairing"))
-            asyncio.create_task(handle_control(client, unpair, "pyduofern/control/start_unpairing"))
-            asyncio.create_task(handle_control(client, control_device, "pyduofern/device/+/control/#"))
-
-            await receive_loop(proto, mqtt_client=client, updates_received=change_event, mqtt_prefix=args.mqtt_prefix,
+            await receive_loop(proto, mqtt_client=client, updates_received=change_event, mqtt_prefix=mqtt_prefix,
                                once=False)
 
     else:
