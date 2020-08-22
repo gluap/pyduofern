@@ -167,6 +167,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.32.0**
+
+- attempt to fix #18 (sensormsg in uppercase)
+
 **0.31.0**
 
 - add mqtt connector
