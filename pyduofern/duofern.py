@@ -564,7 +564,7 @@ class Duofern(object):
                 chan = "01"
 
             chans = []
-            if (sensorMsg[id][chan] == 5):
+            if (sensorMsg[id]["chan"] == 5):
                 chanCount = 4 if (code[0:2] == "73") else 5
                 for x in range(0, chanCount):
                     if ((0x01 << x) & int(chan, 16)):
