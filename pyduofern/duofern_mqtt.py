@@ -28,12 +28,13 @@ def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
 
-async def control_device(client, msg):
+async def control_device(duo, client, msg):
     topic = msg.topic.split("/")
     ci=topic.index("pyduofern")
     device_id = topic[ci+3]
     command = topic[ci+4]
     logger.info(f"received {command} for device {device_id} arg {msg.payload}")
+    logger.info("valid commands:{}".format(await duo.duofern_parser.commands_for_device(device_id)))
 
 
 
@@ -136,7 +137,7 @@ async def _main(arguments=None):
             async for msg in messages:
                 logger.info(f"control message received {msg}")
                 try:
-                    await control(client, msg)
+                    await control(proto, client, msg)
                 except ValueError:
                     logger.warning(f"ignoring incompatible value {msg} for switching")
 
