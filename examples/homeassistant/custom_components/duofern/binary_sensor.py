@@ -98,11 +98,6 @@ class DuofernSmokeDetector(BinarySensorEntity):
         """Return the unique id of the Duofern device"""
         return self._id
 
-    def trigger_update(self):
-        """Tell Home Assistant to update the entity"""
-        _LOGGER.info("Entity update triggered")
-        schedule_update_ha_state(True) # The True makes sure HA calls update before updating the entity
-
     def update(self):
         """Called right before is_on() to update the current state from the stick"""
         try:

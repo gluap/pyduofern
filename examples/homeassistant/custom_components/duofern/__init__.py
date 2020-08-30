@@ -67,7 +67,10 @@ def setup(hass, config):
     stick = hass.data["duofern"]['stick']
 
     def update_callback(id):
-        hass.data[DOMAIN]['devices'][id].trigger_update() # Trigger update on the updated entity
+        _LOGGER.info("Update callback called")
+        device = hass.data[DOMAIN]['devices'][id] # Get device by id
+        if not device.should_poll(): # Only trigger update if this entity is not polling
+            device.schedule_update_ha_state(True) # Trigger update on the updated entity
 
     stick.add_updates_callback(update_callback)
 
