@@ -66,6 +66,11 @@ def setup(hass, config):
     # Setup connection with devices/cloud
     stick = hass.data["duofern"]['stick']
 
+    def update_callback(id):
+        hass.data[DOMAIN]['devices'][id].trigger_update() # Trigger update on the updated entity
+
+    stick.add_updates_callback(update_callback)
+
     def start_pairing(call):
         _LOGGER.warning("start pairing")
         hass.data[DOMAIN]['stick'].pair(call.data.get('timeout', 60))
