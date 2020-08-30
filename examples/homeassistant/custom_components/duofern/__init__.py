@@ -66,12 +66,13 @@ def setup(hass, config):
     stick = hass.data[DOMAIN]['stick']
 
     def update_callback(id):
-        try:
-            device = hass.data[DOMAIN]['devices'][id] # Get device by id
-            if not device.should_poll(): # Only trigger update if this entity is not polling
-                device.schedule_update_ha_state(True) # Trigger update on the updated entity
-        except KeyError:
-            _LOGGER.debug("Update callback called on unknown device id") # Ignore invalid device ids
+        if id is not None:
+            try:
+                device = hass.data[DOMAIN]['devices'][id] # Get device by id
+                if not device.should_poll(): # Only trigger update if this entity is not polling
+                    device.schedule_update_ha_state(True) # Trigger update on the updated entity
+            except KeyError:
+                _LOGGER.debug("Update callback called on unknown device id") # Ignore invalid device ids
 
     stick.add_updates_callback(update_callback)
 
