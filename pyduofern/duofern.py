@@ -125,7 +125,7 @@ class Duofern(object):
         self.modules['by_code'][code][key] = value
 
         if self.changes_callback and trigger:
-            self.changes_callback(code)
+            self.changes_callback(code, key, value)
 
     def delete_state(self, code, key, channel: int = None):
         if channel is not None:

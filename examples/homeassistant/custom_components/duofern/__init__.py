@@ -65,7 +65,7 @@ def setup(hass, config):
     # Setup connection with devices/cloud
     stick = hass.data[DOMAIN]['stick']
 
-    def update_callback(id):
+    def update_callback(id, key, value):
         if id is not None:
             try:
                 device = hass.data[DOMAIN]['devices'][id] # Get device by id
