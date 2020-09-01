@@ -61,10 +61,22 @@ def setup(hass, config):
         'stick': DuofernStickThreaded(serial_port=serial_port, system_code=code, config_file_json=configfile,
                                       ephemeral=False),
         'devices': {}}
-    hass.data[DOMAIN]['stick'].start()
 
     # Setup connection with devices/cloud
-    stick = hass.data["duofern"]['stick']
+    stick = hass.data[DOMAIN]['stick']
+
+    def update_callback(id, key, value):
+        if id is not None:
+            try:
+                device = hass.data[DOMAIN]['devices'][id] # Get device by id
+                if not device.should_poll: # Only trigger update if this entity is not polling
+                    device.schedule_update_ha_state(True) # Trigger update on the updated entity
+            except KeyError:
+                _LOGGER.debug("Update callback called on unknown device id") # Ignore invalid device ids
+
+    stick.add_updates_callback(update_callback)
+
+    stick.start()
 
     def start_pairing(call):
         _LOGGER.warning("start pairing")
