@@ -31,7 +31,6 @@ class DuofernShutter(CoverEntity):
         self._id = id
         self._name = desc
         self._state = None
-        self._brightness = None
         self._stick = stick
         hass.data[DOMAIN]['devices'][id] = self
 
@@ -42,18 +41,17 @@ class DuofernShutter(CoverEntity):
     @property
     def current_cover_position(self):
         """Return the display name of this cover."""
-        try:
-            return 100 - self._stick.duofern_parser.modules['by_code'][self._id]['position']
-        except KeyError:
-            return None
+        return self._state
 
     @property
     def is_closed(self):
         """Return true if cover is close."""
-        try:
-            return self._stick.duofern_parser.modules['by_code'][self._id]['position'] == 100
-        except KeyError:
-            return False
+        return self._state == 100
+
+    @property
+    def should_poll(self):
+        """Whether this entity should be polled or uses subscriptions"""
+        return False # TODO: Add config option for subscriptions over polling
 
     @property
     def unique_id(self):
@@ -77,13 +75,14 @@ class DuofernShutter(CoverEntity):
         self._stick.command(self._id, "position", 100 - position)
 
     def update(self):
-        """Fetch new state data for this light.
+        """Fetch new state data for this cover.
 
         This is the only method that should fetch new data for Home Assistant.
-        
+
         (no new data needs to be fetched, the stick updates itsself in a thread)
         (not the best style for homeassistant, I know. I'll port to asyncio if I find the time)
         """
-        pass
-        # self._state = True
-        # self._brightness = None
+        try:
+            self._state = 100 - self._stick.duofern_parser.modules['by_code'][self._id]['position']
+        except KeyError:
+            self._state = None
