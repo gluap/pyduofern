@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 # from homeassistant.const import 'serial_port', 'config_file', 'code'
 import homeassistant.helpers.config_validation as cv
@@ -111,6 +112,7 @@ def setup(hass, config):
 
     stick.add_updates_callback(update_callback)
 
-    stick.start()
+    time.sleep(5) # Wait for 5 seconds so HA can get our entities ready so we don't miss any updates (there are probably nicer ways to do this)
+    stick.start() # Start the stick after 5 seconds
 
     return True
