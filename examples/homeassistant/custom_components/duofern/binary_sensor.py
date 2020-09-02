@@ -41,6 +41,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class DuofernSmokeDetector(BinarySensorEntity):
+    """Duofern smoke detector entity"""
+
     def __init__(self, code, desc, stick, hass, channel=None):
         """Initialize the smoke detector"""
 
@@ -90,7 +92,7 @@ class DuofernSmokeDetector(BinarySensorEntity):
 
     @property
     def should_poll(self):
-        """Whether this entity should be polled or uses trigger_update"""
+        """Whether this entity should be polled or uses subscriptions"""
         return False # TODO: Add config option for subscriptions over polling
 
     @property
