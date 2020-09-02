@@ -167,6 +167,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.33.0**
+
+- add smokedetector introduced by @DomiStyle in #20 to master
+
 **0.32.0**
 
 - fix case to try and fix #18 for sensorMsg
