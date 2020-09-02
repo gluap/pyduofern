@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 # from homeassistant.const import 'serial_port', 'config_file', 'code'
 import homeassistant.helpers.config_validation as cv
@@ -65,19 +66,6 @@ def setup(hass, config):
     # Setup connection with devices/cloud
     stick = hass.data[DOMAIN]['stick']
 
-    def update_callback(id, key, value):
-        if id is not None:
-            try:
-                device = hass.data[DOMAIN]['devices'][id] # Get device by id
-                if not device.should_poll: # Only trigger update if this entity is not polling
-                    device.schedule_update_ha_state(True) # Trigger update on the updated entity
-            except KeyError:
-                _LOGGER.debug("Update callback called on unknown device id") # Ignore invalid device ids
-
-    stick.add_updates_callback(update_callback)
-
-    stick.start()
-
     def start_pairing(call):
         _LOGGER.warning("start pairing")
         hass.data[DOMAIN]['stick'].pair(call.data.get('timeout', 60))
@@ -109,5 +97,22 @@ def setup(hass, config):
 
     for _component in DUOFERN_COMPONENTS:
         discovery.load_platform(hass, _component, DOMAIN, {}, config)
+
+    def update_callback(id, key, value):
+        if id is not None:
+            try:
+                device = hass.data[DOMAIN]['devices'][id] # Get device by id
+                if not device.should_poll: # Only trigger update if this entity is not polling
+                    try:
+                        device.schedule_update_ha_state(True) # Trigger update on the updated entity
+                    except AssertionError:
+                        _LOGGER.warning("Update callback called before HA is ready") # Trying to update before HA is ready
+            except KeyError:
+                _LOGGER.warning("Update callback called on unknown device id") # Ignore invalid device ids
+
+    stick.add_updates_callback(update_callback)
+
+    time.sleep(5) # Wait for 5 seconds so HA can get our entities ready so we don't miss any updates (there are probably nicer ways to do this)
+    stick.start() # Start the stick after 5 seconds
 
     return True
