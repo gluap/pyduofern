@@ -167,6 +167,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.34.0**
+
+- merge callback state updates for covers introduced by @DomiStyle in #21 to master
+
 **0.33.0**
 
 - add smokedetector introduced by @DomiStyle in #20 to master
