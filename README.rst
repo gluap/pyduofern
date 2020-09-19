@@ -167,6 +167,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.34.1**
+
+- functionally equivalent to 0.34.0, removed shebangs where not required, moved unit tests outside of packaging
+
 **0.34.0**
 
 - merge callback state updates for covers introduced by @DomiStyle in #21 to master
