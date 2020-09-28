@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # coding=utf-8
 #   python interface for dufoern usb stick
 #   Copyright (C) 2017 Paul Görgen
@@ -125,7 +124,7 @@ class Duofern(object):
         self.modules['by_code'][code][key] = value
 
         if self.changes_callback and trigger:
-            self.changes_callback()
+            self.changes_callback(code, key, value)
 
     def delete_state(self, code, key, channel: int = None):
         if channel is not None:
@@ -564,7 +563,7 @@ class Duofern(object):
                 chan = "01"
 
             chans = []
-            if (sensorMsg[id][chan] == 5):
+            if (sensorMsg[id]["chan"] == 5):
                 chanCount = 4 if (code[0:2] == "73") else 5
                 for x in range(0, chanCount):
                     if ((0x01 << x) & int(chan, 16)):
@@ -936,7 +935,7 @@ class Duofern(object):
             #     if((args[c] =~ m/^[-\d]+/) and (args[c] >=    wCmds{cmd}{min}) and (args[c] <=    wCmds{cmd}{max})) {
             #         reg &= ~(wCmds{cmd}{mask})
             #         reg |= wCmds{cmd}{enable}
-            #         reg |= ((args[c] +    wCmds{cmd}{offset})<<wCmds{cmd}{shift}) & wCmds{cmd}{mask} 
+            #         reg |= ((args[c] +    wCmds{cmd}{offset})<<wCmds{cmd}{shift}) & wCmds{cmd}{mask}
             #
             #     } elsif ((args[c] == "off") and (wCmds{cmd}{enable} > 0)) {
             #         reg &= ~(wCmds{cmd}{enable})
