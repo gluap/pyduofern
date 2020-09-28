@@ -5,5 +5,5 @@
   "dependencies": [],
   "config_flow": true,
   "codeowners": ["@gluap"],
-  "requirements": ["pyduofern==0.30.0"]
+  "requirements": ["pyduofern==0.34.1"]
 }
