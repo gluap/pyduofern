@@ -1,9 +1,0 @@
-{
-  "domain": "duofern",
-  "name": "Duofern control",
-  "documentation": "https://github.com/gluap/pyduofern/tree/master/examples",
-  "dependencies": [],
-  "config_flow": true,
-  "codeowners": ["@gluap"],
-  "requirements": ["pyduofern==0.34.1"]
-}

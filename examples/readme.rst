@@ -1,44 +1,12 @@
 Examples
 ========
-
-
-Setup with Hassio
------------------
-
-The following is setup procedure with hassio
-
-- install hassio
-- via the GUI enable the `SSH Server addon <https://www.home-assistant.io/addons/ssh/>`_
-- login via ssh
-- connect the stick
-- download the pyduofern repo via git, copy the custom component and add duofern to your config by running::
-
-     git clone https://github.com/gluap/pyduofern/
-     cp -r pyduofern/examples/homeassistant/custom_components /config/
-     # next line only if you don't already have it yet:
-     echo "duofern:" >> /config/configuration.yaml
-     # next use 4 digit hex code of your choice instead of ffff ("password" for your duofern net)
-     # if you are migrating from FHEM: Skip the "6f" from the beginning of the code,
-     # only use the last 4 characters
-     echo "  code: ffff" >> /config/configuration.yaml
-     echo -n "  serial_port: " >> /config/configuration.yaml && ls /dev/serial/by-id/usb-Rademacher_DuoFern* >> /config/configuration.yaml
-
-- restart homeassistant via the GUI
-- stick should stop blinking once homeassistant initializes it
-- devices previously paired with the coded should be auto-detected, if not call the service ``duofern.sync_devices`` (see below).
-- to pair a device call the service ``duofern.start_pairing`` via the gui and do the pairing motions from the manual of the device
-
-.. image:: ./pairing.png
-
-- to force a refresh of paired devices (should happen automatically) run the service duofern.sync_devices
-
-.. image:: ./sync_devices.png
-
-- if required you can edit the ``configuration.yaml`` and use the config options from the "Vanilla homeassistant" section.
+Setup with Homeassistant OS (using HACS)
+----------------------------------------
+Use HACS and follow the manual on `<https://github.com/gluap/pyduofern-hacs>`_
 
 Setup with vanilla homeassistant (no hassio)
 --------------------------------------------
-To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add the ``custom_components`` directory from the examples  to
+To use ``pyduofern`` within `Homeassistant <https://home-assistant.io/>`_, add the ``custom_components`` from `<https://github.com/gluap/pyduofern-hacs>`_  from the examples  to
 ``~/.homeassistant/`` directory and enable it by adding the following to your ``configuration.yaml``::
 
     duofern:
