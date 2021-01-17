@@ -1,5 +1,6 @@
 Examples
 ========
+This Documentation will migrate into `<https://github.com/gluap/pyduofern-hacs>`_
 Setup with Homeassistant OS (using HACS)
 ----------------------------------------
 Use HACS and follow the manual on `<https://github.com/gluap/pyduofern-hacs>`_
