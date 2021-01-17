@@ -132,7 +132,7 @@ in the default config file.a
 
 Usage with Homeassistant
 ========================
-Find an example code for using these blinds with homeassistant in the examples folder
+There is a custom component for homeassistant that can be easily deployed via hacs at `<https://github.com/gluap/pyduofern-hacs>`_
 
 
 Usage from python
