@@ -84,9 +84,6 @@ def test_init_against_mocked_stick(looproto):
 
     loop.run_until_complete(initialization)
 
-    for task in asyncio.Task.all_tasks():
-        task.cancel()
-
 
 def test_raises_when_run_without_code():
     loop = asyncio.get_event_loop()
