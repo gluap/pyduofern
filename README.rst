@@ -16,6 +16,9 @@ my Duofern blinds. I did not port the Weather-Station related features of the or
 do not own the corresponding hardware and have no means to test if it works. I only tested it with the model
 *RolloTron Standard DuoFern 14233011 Funk-Gurtwickler Aufputz*.
 
+As reported in #31 10-Digit codes recently announced by Rademacher are not supported as of now as the handshake/
+protocol for these devices was not reverse engineered by anyone as far as I know.
+
 This requires the Duofern USB Stick Art.-Nr.: 70000093 by Rademacher.
 
 I do not provide any guarantees for the usability of this software. Use at your own risk.
