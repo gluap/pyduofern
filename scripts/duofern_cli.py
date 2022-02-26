@@ -25,9 +25,10 @@ from cmd import Cmd
 
 from pyduofern.duofern_stick import DuofernStickThreaded
 
+
 parser = argparse.ArgumentParser(epilog="use at your own risk")
 
-parser.add_argument('--configfile', help='location of system config file', default=None, metavar="CONFIGFILE")
+parser.add_argument('--configfile', help='location of system config file (if omitted the default config file will be used)', default=None, metavar="CONFIGFILE")
 
 parser.add_argument('--code', help='set 4-digit hex code for the system (warning, always use same code for once-paired '
                                    'devices) best chose something on the first run and write it down.',
@@ -35,7 +36,7 @@ parser.add_argument('--code', help='set 4-digit hex code for the system (warning
 
 parser.add_argument('--device',
                     help='path to serial port created by duofern stick, defaults to first found serial port, typically '
-                         'something like /dev/ttyUSB0 or /dev/duofernstick if you use the provided udev rules file',
+                         'something like /dev/ttyUSB0 or /dev/serial/by-id/... or /dev/duofernstick if you use the provided udev rules file',
                     default=None)
 
 parser.add_argument('--pair', action='store_true',
@@ -269,7 +270,6 @@ class DuofernCLI(Cmd):
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    # print(args.up)
     if args.debug:
         logging.basicConfig(format='    %(asctime)s: %(message)s', level=logging.DEBUG)
     else:
