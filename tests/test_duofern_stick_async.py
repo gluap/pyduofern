@@ -72,7 +72,7 @@ async def test_init_against_mocked_stick(event_loop,recording, configfile):
     proto._ready.set()
 
 
-    async def cb(a):
+    def cb(a):
         logging.info(a)
 
     proto.available.add_done_callback(cb)

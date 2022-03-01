@@ -142,7 +142,9 @@ class TransportMock:
 @pytest.mark.parametrize('replayfile', list_replays())
 @pytest.mark.asyncio
 async def test_init_against_mocked_stick(event_loop, replayfile):
-    proto = DuofernStickAsync(event_loop, system_code="ffff", config_file_json=tempfile.mktemp(), recording=False)
+    def bla(*args,**kwargs):
+        pass
+    proto = DuofernStickAsync(event_loop, system_code="ffff", config_file_json=tempfile.mktemp(), recording=False, changes_callback=bla)
     proto.transport = TransportMock(proto, replayfile)
     proto._ready = asyncio.Event()
 
