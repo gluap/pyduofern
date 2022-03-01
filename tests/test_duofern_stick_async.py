@@ -46,15 +46,6 @@ def configfile(request):
     return request.param
 
 
-@pytest.fixture(scope="function", params=[True, False])
-def looproto(request, configfile):
-    loop = asyncio.get_event_loop()
-
-    proto = DuofernStickAsync(loop, system_code="ffff", config_file_json=configfile,
-                              recording=request.param)
-    return loop, proto
-
-
 class TransportMock:
     def __init__(self, proto):
         super(TransportMock).__init__()
@@ -68,21 +59,24 @@ class TransportMock:
         self.proto._ready.set()
 
 
-def test_init_against_mocked_stick(looproto):
-    loop, proto = looproto
+@pytest.mark.parametrize(("recording"), [False, True])
+@pytest.mark.asyncio
+async def test_init_against_mocked_stick(event_loop,recording, configfile):
+    proto = DuofernStickAsync(event_loop, system_code="ffff", config_file_json=configfile,
+                              recording=recording)
     proto.transport = TransportMock(proto)
     proto._ready = asyncio.Event()
 
-    initialization = asyncio.ensure_future(proto.handshake())
+    init_ = asyncio.ensure_future(proto.handshake())
 
     proto._ready.set()
 
-    def cb(a):
+
+    async def cb(a):
         logging.info(a)
 
     proto.available.add_done_callback(cb)
-
-    loop.run_until_complete(initialization)
+    await init_
 
 
 def test_raises_when_run_without_code():

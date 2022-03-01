@@ -154,7 +154,7 @@ class DuofernStick(object):
         else:
             record_filename = tempfile.mktemp(prefix="duofern_record_")
             print("recording to  {}".format(record_filename))
-        self.recorder = open(record_filename, 'w')
+        self.record_filename = record_filename
 
     def _initialize(self, **kwargs):  # pragma: no cover
         raise NotImplementedError("need to use an implementation of the Duofernstick")
@@ -174,8 +174,9 @@ class DuofernStick(object):
 
     def process_message(self, message):
         if self.recording:
-            self.recorder.write("received {}\n".format(message))
-            self.recorder.flush()
+            with open(self.record_filename, "a") as recorder:
+                recorder.write("received {}\n".format(message))
+                recorder.flush()
         if message[0:2] == '81':
             #            logger.debug("got Acknowledged")
             # return
@@ -282,16 +283,16 @@ def one_time_callback(protocol, _message, name, future):
     logger.info("{} answer for {}".format(_message, name))
     if not future.cancelled():
         future.set_result(_message)
+        future.done()
         protocol.callback = None
 
 
-@asyncio.coroutine
-def send_and_await_reply(protocol, message, message_identifier):
+async def send_and_await_reply(protocol, message, message_identifier):
     future = asyncio.Future()
     protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
-    yield from protocol.send(message)
+    protocol.send(message)
     try:
-        result = yield from future
+        result = await future
         logger.info("got reply {}".format(result))
     except asyncio.CancelledError:
         logger.info("future was cancelled waiting for reply")
@@ -323,17 +324,17 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     #        self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
     #        self.running = False
 
-    @asyncio.coroutine
     def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
-            self.recorder.flush()
-        yield from self.duofern_parser.set(*args, **kwargs)
+            with open(self.record_filename, "a") as recorder:
+                recorder.write("sending_command {} {}\n".format(args, kwargs))
+                recorder.flush()
+        self.duofern_parser.set(*args, **kwargs)
 
-    def add_serial_and_send(self, msg):
+    async def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.info("sending {}".format(message))
-        yield from self.send(message)
+        self.send(message)
         logger.info("added {} to write queue".format(message))
 
     def connection_made(self, transport):
@@ -351,10 +352,11 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         self.buffer += bytearray(data)
         while len(self.buffer) >= 22:
             if self.recording:
-                self.recorder.write("received {}\n".format(hex(self.buffer[0:22])))
-                self.recorder.flush()
+                with open(self.record_filename, "a") as recorder:
+                    recorder.write("received {}\n".format(hex(self.buffer[0:22])))
+                    recorder.flush()
             if not hex(self.buffer[0:22]) == duoACK:
-                list(self.send(duoACK))
+                self.send(duoACK)
             if hasattr(self, 'callback') and self.callback is not None:
                 self.callback(hex(self.buffer[0:22]))
             elif self.initialized:
@@ -372,24 +374,23 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     def parse(self, packet):
         logger.info(packet)
 
-    @asyncio.coroutine
     def send(self, data, **kwargs):
         """ Feed a message to the sender coroutine. """
         tosend = bytearray.fromhex(data)
         if self.recording:
-            self.recorder.write("sent {}\n".format(data))
-            self.recorder.flush()
-        yield from self.write_queue.put(tosend)
+            with open(self.record_filename, "a") as recorder:
+                recorder.write("sent {}\n".format(data))
+                recorder.flush()
+        self.write_queue.put_nowait(tosend)
 
-    @asyncio.coroutine
-    def _send_messages(self):
+    async def _send_messages(self):
         """ Send messages to the server as they become available. """
-        yield from self._ready.wait()
+        await self._ready.wait()
         logger.debug("Starting async send loop!")
         while True:
             try:
                 logger.info("sending from stack")
-                data = yield from self.write_queue.get()
+                data = await self.write_queue.get()
                 self.transport.write(data)
             except asyncio.CancelledError:
                 logger.info("Got CancelledError, stopping send loop")
@@ -400,17 +401,16 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
     def parse_regular(self, packet):
         logger.info(packet)
 
-    @asyncio.coroutine
-    def handshake(self):
+    async def handshake(self):
         if not hasattr(self.transport, 'unittesting'):
-            yield from asyncio.sleep(2)
+            await asyncio.sleep(2)
             logger.info("now handshaking")
-        yield from send_and_await_reply(self, duoInit1, "init 1")
-        yield from send_and_await_reply(self, duoInit2, "init 2")
-        yield from send_and_await_reply(self, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
-        yield from self.send(duoACK)
-        yield from send_and_await_reply(self, duoInit3, "init 3")
-        yield from self.send(duoACK)
+        await send_and_await_reply(self, duoInit1, "init 1")
+        await send_and_await_reply(self, duoInit2, "init 2")
+        await send_and_await_reply(self, duoSetDongle.replace("zzzzzz", "6f" + self.system_code), "SetDongle")
+        self.send(duoACK)
+        await send_and_await_reply(self, duoInit3, "init 3")
+        self.send(duoACK)
         if 'devices' in self.config and self.config['devices']:
             counter = 0
             for device in self.config['devices']:
@@ -421,15 +421,15 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
                 if len(device['id']) != 6:
                     continue
                 hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
-                yield from send_and_await_reply(self, hex_to_write, "SetPairs")
-                yield from self.send(duoACK)
+                await send_and_await_reply(self, hex_to_write, "SetPairs")
+                self.send(duoACK)
                 counter += 1
                 self.duofern_parser.add_device(device['id'], device['name'])
 
-        yield from send_and_await_reply(self, duoInitEnd, "duoInitEnd")
-        yield from self.send(duoACK)
-        yield from send_and_await_reply(self, duoStatusRequest, "duoInitEnd")
-        yield from self.send(duoACK)
+        await send_and_await_reply(self, duoInitEnd, "duoInitEnd")
+        self.send(duoACK)
+        await send_and_await_reply(self, duoStatusRequest, "duoInitEnd")
+        self.send(duoACK)
         self.available.set_result(True)
         self.initialized = True
 
@@ -462,8 +462,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         logger.debug("response {}".format(hex(response)))
 
         if self.recording:
-            self.recorder.write("received {}\n".format(hex(response)))
-            self.recorder.flush()
+            with open(self.record_filename, "a") as recorder:
+                recorder.write("received {}\n".format(hex(response)))
 
         return hex(response)
 
@@ -556,8 +556,9 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         logger.debug("writing  {}".format(string_to_write))
         hex_to_write = string_to_write.replace(" ", '')
         if self.recording:
-            self.recorder.write("sent {}\n".format(hex_to_write))
-            self.recorder.flush()
+            with open(self.record_filename, "a") as recorder:
+                recorder.write("sent {}\n".format(hex_to_write))
+
         data_to_write = bytearray.fromhex(hex_to_write)
         if not self.serial_connection.isOpen():
             self.serial_connection.open()
@@ -565,15 +566,16 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
 
     def command(self, *args, **kwargs):
         if self.recording:
-            self.recorder.write("sending_command {} {}\n".format(args,kwargs))
-            self.recorder.flush()
-        list(self.duofern_parser.set(*args, **kwargs))
+            with open(self.record_filename, "a") as recorder:
+                write("sending_command {} {}\n".format(args,kwargs))
 
-    @asyncio.coroutine
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.duofern_parser.set(*args, **kwargs))
+
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
         logger.debug("sending {}".format(message))
-        yield self.send(message)
+        self.send(message)
         logger.debug("added {} to write queue".format(message))
 
     def run(self):

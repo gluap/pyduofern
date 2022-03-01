@@ -715,11 +715,9 @@ class Duofern(object):
 
         return name
 
-    @asyncio.coroutine
     def send(self, cmd):
-        yield from self.send_hook(cmd)
+        self.send_hook(cmd)
 
-    @asyncio.coroutine
     def set(self, code, cmd, *args, channel: int = None):
         # my (hash, @a) = @_
         # b = @a
@@ -774,7 +772,7 @@ class Duofern(object):
             buf = duoStatusRequest
             buf = buf.replace("nn", commandsStatus[cmd])
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
+            self.send(buf)
             return None
 
         elif cmd == "clear":
@@ -790,7 +788,7 @@ class Duofern(object):
         elif cmd == "getConfig":
             buf = duoWeatherConfig
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
+            self.send(buf)
             return None
 
         elif cmd == "writeConfig":
@@ -803,7 +801,7 @@ class Duofern(object):
                 buf = buf.replace("yyyyyy", code)
                 buf = buf.replace("rr", reg)
                 buf = buf.replace("nnnnnnnnnnnnnnnnnnnn", regV)
-                yield from self.send(buf)
+                self.send(buf)
 
             if "configModified" in self.modules['by_code'][code]:
                 self.modules['by_code'][code].__delitem__("configModified")
@@ -825,7 +823,7 @@ class Duofern(object):
             buf = buf.replace("mmmmmmmm", m)
             buf = buf.replace("nnnnnn", n)
             buf = buf.replace("yyyyyy", code)
-            yield from self.send(buf)
+            self.send(buf)
             return None
 
         elif cmd in wCmds:
@@ -1112,7 +1110,7 @@ class Duofern(object):
             buf = buf.replace("wwww", argW)
             buf = buf.replace("kk", chanNo)
             logger.debug("trying to send {}".format(buf))
-            yield from self.send(buf)
+            self.send(buf)
             #            if ('device' in self.modules['by_code'][code]):
             # hash = defs{hash->{device}}
 

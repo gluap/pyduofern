@@ -61,16 +61,16 @@ class Output(asyncio.Protocol):
     @asyncio.coroutine
     def send_message(self, data):
         """ Feed a message to the sender coroutine. """
-        yield from self.send_queue.put(data)
+        await self.send_queue.put(data)
 
     @asyncio.coroutine
     def _send_messages(self):
         """ Send messages to the server as they become available. """
-        yield from self._ready.wait()
+        await self._ready.wait()
         logger.debug("Starting async send loop!")
         while True:
             try:
-                data = yield from self.send_queue.get()
+                data = await self.send_queue.get()
                 self.transport.write(data)
             except asyncio.CancelledError:
                 logger.info("Got CancelledError, stopping send loop")
@@ -100,9 +100,9 @@ def one_time_callback(protocol, _message, name, future):
 def send_and_await_reply(protocol, message, message_identifier):
     future = asyncio.Future()
     protocol.callback = lambda message: one_time_callback(protocol, message, message_identifier, future)
-    yield from protocol.send_message(message.encode("utf-8"))
+    await protocol.send_message(message.encode("utf-8"))
     try:
-        result = yield from future
+        result = await future
         logger.info("got reply {}".format(result))
     except asyncio.CancelledError:
         logger.info("future was cancelled waiting for reply")
@@ -110,32 +110,32 @@ def send_and_await_reply(protocol, message, message_identifier):
 
 @asyncio.coroutine
 def handshake(protocol):
-    yield from asyncio.sleep(2)
+    await asyncio.sleep(2)
     HANDSHAKE = [(duoInit1, "INIT1"),
                  (duoInit2, "INIT2"),
                  (duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle"),
                  (duoACK),
                  (duoInit3, "INIT3")]
-    yield from send_and_await_reply(protocol, duoInit1, "init 1")
-    yield from send_and_await_reply(protocol, duoInit2, "init 2")
-    yield from send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle")
-    yield from protocol.send_message(duoACK.encode("utf-8"))
-    yield from send_and_await_reply(protocol, duoInit3, "init 3")
-    yield from protocol.send_message(duoACK.encode("utf-8"))
+    await send_and_await_reply(protocol, duoInit1, "init 1")
+    await send_and_await_reply(protocol, duoInit2, "init 2")
+    await send_and_await_reply(protocol, duoSetDongle.replace("zzzzzz", "6f" + "affe"), "SetDongle")
+    await protocol.send_message(duoACK.encode("utf-8"))
+    await send_and_await_reply(protocol, duoInit3, "init 3")
+    await protocol.send_message(duoACK.encode("utf-8"))
     logger.info(self.config)
     if "devices" in self.config:
         counter = 0
         for device in self.config['devices']:
             hex_to_write = duoSetPairs.replace('nn', '{:02X}'.format(counter)).replace('yyyyyy', device['id'])
-            yield from send_and_await_reply(protocol, hex_to_write, "SetPairs")
-            yield from protocol.send_message(duoACK.encode("utf-8"))
+            await send_and_await_reply(protocol, hex_to_write, "SetPairs")
+            await protocol.send_message(duoACK.encode("utf-8"))
             counter += 1
             self.duofern_parser.add_device(device['id'], device['name'])
 
-    yield from send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
-    yield from protocol.send_message(duoACK.encode("utf-8"))
-    yield from send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
-    yield from protocol.send_message(duoACK.encode("utf-8"))
+    await send_and_await_reply(protocol, duoInitEnd, "duoInitEnd")
+    await protocol.send_message(duoACK.encode("utf-8"))
+    await send_and_await_reply(protocol, duoStatusRequest, "duoInitEnd")
+    await protocol.send_message(duoACK.encode("utf-8"))
 
 
 f, proto = loop.run_until_complete(coro)
