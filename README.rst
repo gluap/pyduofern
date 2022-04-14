@@ -170,6 +170,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.34.2**
+
+- merged pull request by [@realbuxtehuder](https://github.com/realbuxtehuder) that adds stop command to cli
+
 **0.34.1**
 
 - functionally equivalent to 0.34.0, removed shebangs where not required, moved unit tests outside of packaging
