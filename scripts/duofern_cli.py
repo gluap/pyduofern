@@ -70,8 +70,8 @@ parser.add_argument('--set_name', help='Set name for a device.', nargs=2, defaul
 parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
 parser.add_argument('--up', help='pull up the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
-parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
-                    default=None)
+parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
+parser.add_argument('--stop', help='stop the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
 
 parser.add_argument('--on', help='switch on (for "Steckdosenaktor")', metavar="NAME", nargs='+', default=None)
 parser.add_argument('--off', help='switch off (for "Steckdosenaktor")', metavar="NAME", nargs='+',
@@ -354,6 +354,19 @@ if __name__ == "__main__":
             stick.command(blind_id, "down")
             time.sleep(0.5)
             stick.command(blind_id, "down")
+            time.sleep(2)
+    
+    if args.stop:
+        stick._initialize()
+        stick.start()
+        time.sleep(1)
+        ids = [device['id'] for device in stick.config['devices'] if device['name'] in args.stop]
+        for blind_id in ids:
+            stick.command(blind_id, "stop")
+            time.sleep(0.5)
+            stick.command(blind_id, "stop")
+            time.sleep(0.5)
+            stick.command(blind_id, "stop")
             time.sleep(2)
 
     if args.on:
