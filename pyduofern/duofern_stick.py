@@ -567,10 +567,8 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     def command(self, *args, **kwargs):
         if self.recording:
             with open(self.record_filename, "a") as recorder:
-                write("sending_command {} {}\n".format(args,kwargs))
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.duofern_parser.set(*args, **kwargs))
+                recorder.write("sending_command {} {}\n".format(args,kwargs))
+        self.duofern_parser.set(*args, **kwargs)
 
     def add_serial_and_send(self, msg):
         message = msg.replace("zzzzzz", "6f" + self.system_code)
