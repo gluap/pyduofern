@@ -586,7 +586,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             try:
                 in_data = hex(self.serial_connection.read(22))
             except TypeError:
-                pass
+                continue
             if len(in_data) == 44:
                 if in_data != duoACK:
                     self._simple_write(duoACK)
