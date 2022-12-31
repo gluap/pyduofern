@@ -170,6 +170,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.34.3**
+
+- Fix issue with asynchronous code in synchronous part of the code that was breaking homeassistant.
+
 **0.34.2**
 
 - merged pull request by [@realbuxtehuder](https://github.com/realbuxtehuder) that adds stop command to cli
