@@ -34,6 +34,7 @@ from importlib import reload
 from unittest.mock import Mock
 
 import pyduofern.duofern_stick as df
+df.MIN_MESSAGE_INTERVAL_MILLIS=0
 
 
 def write_mock(data):

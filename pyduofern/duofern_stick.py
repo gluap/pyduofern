@@ -24,6 +24,7 @@
 
 import asyncio
 import codecs
+import datetime
 import json
 import logging
 import os
@@ -59,6 +60,8 @@ duoStartUnpair = "07000000000000000000000000000000000000000000"
 duoStopUnpair = "08000000000000000000000000000000000000000000"
 duoRemotePair = "0D0006010000000000000000000000000000yyyyyy01"
 
+
+MIN_MESSAGE_INTERVAL_MILLIS = 50
 
 def refresh_serial_connection(function):
     def new_funtion(*args, **kwargs):
@@ -451,6 +454,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
         self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
         self.running = False
+        self.last_send = datetime.datetime.now()
 
     def _read_answer(self, some_string):  # ReadAnswer
         """read an answer..."""
@@ -553,6 +557,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     @refresh_serial_connection
     def _simple_write(self, string_to_write):  # SimpleWrite
         """Just write data"""
+        self.last_send = datetime.datetime.now()
         logger.debug("writing  {}".format(string_to_write))
         hex_to_write = string_to_write.replace(" ", '')
         if self.recording:
@@ -588,14 +593,14 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             except TypeError:
                 continue
             if len(in_data) == 44:
-                if in_data != duoACK:
-                    self._simple_write(duoACK)
                 try:
                     self.process_message(in_data)
                 except Exception as exc:
                     logger.exception(exc)
+                if in_data != duoACK:
+                    self._simple_write(duoACK)
             self.serial_connection.timeout = 1
-            if len(self.write_queue) > 0:
+            if (len(self.write_queue) > 0) and ((datetime.datetime.now() - self.last_send) >= datetime.timedelta(milliseconds=MIN_MESSAGE_INTERVAL_MILLIS)):
                 self.handle_write_queue()
 
     def stop(self):

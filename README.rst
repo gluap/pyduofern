@@ -170,6 +170,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.35.0**
+
+- limit message sending frequency.
+
 **0.34.3**
 
 - Fix issue with asynchronous code in synchronous part of the code that was breaking homeassistant.
