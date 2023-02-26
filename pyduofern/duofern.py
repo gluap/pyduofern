@@ -548,7 +548,7 @@ class Duofern(object):
                 # readingsEndUpdate(hash, 1)
 
             else:
-                logger.warning("DUOFERN unknown msg: {}".format(msg))
+                logger.info("DUOFERN unknown msg: {}".format(msg))
 
 
         # Wandtaster, Funksender UP, Handsender, Sensoren
@@ -556,7 +556,7 @@ class Duofern(object):
             id = msg[4:4 + 4]
 
             if id not in sensorMsg:
-                logger.warning("unknown message {}".format(msg))
+                logger.info("unknown message {}".format(msg))
 
             chan = msg[sensorMsg[id]['chan'] * 2 + 2:sensorMsg[id]['chan'] * 2 + 4]
             if code[0:2] in ("61", "70", "71"):
@@ -697,7 +697,7 @@ class Duofern(object):
 
         # NACK, Befehl nicht vom Aktor empfangen
         elif msg[0:8] == "810108aa":
-            logger.warning("missing ack for {}".format(self.modules['by_code'][code]))
+            logger.info("missing ack for {}".format(self.modules['by_code'][code]))
             # self.update_state(code, "state", "MISSING ACK", "1", channel=channel)
             # foreach (grep (/^channel_/, keys%{hash})){
             #   chnHash = module_definitions{hash->{_}}
@@ -706,7 +706,7 @@ class Duofern(object):
             # Log3 hash, 3, "DUOFERN error: name MISSING ACK"
 
         else:
-            logger.warning("Unknown msg: {}".format(msg))
+            logger.info("Unknown msg: {}".format(msg))
 
 #        if module_definition01:
 #            DoTrigger(module_definition01['name'], None)
