@@ -732,7 +732,7 @@ class Duofern(object):
         # code = code[0:0 + 6]
         name = self.modules['by_code'][code]['name']
 
-        # sets
+        sets = {}
 
         if code[0:2] == "49":
             sets = merge_dicts(setsBasic, setsDefaultRollerShutter, setsRolloTube)

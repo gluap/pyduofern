@@ -170,6 +170,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.35.1**
+
+- fix issue with crashes when "sets" was not defined because a bogous device type was present in duofern config.
+
 **0.35.0**
 
 - limit message sending frequency.
