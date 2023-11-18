@@ -142,10 +142,10 @@ Usage from python
 =================
 .. code-block:: python
 
-    from pyduofern.duofern_stick import DuofernStick
+    from pyduofern.duofern_stick import DuofernStickThreaded
     import time
-    stick = DuofernStick(device="/dev/duofernstick") # by default looks for /dev/duofernstick
-    stick_initialize() # do some initialization sequence with the stick
+    stick = DuofernStickThreaded(device="/dev/duofernstick") # by default looks for /dev/duofernstick
+    stick._initialize() # do some initialization sequence with the stick
     stick.start() # start the stick in a thread so it keeps communicating with your blinds
     time.sleep(10) # let it settle to be able to talk to your blinds.
     # your code here
