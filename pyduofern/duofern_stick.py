@@ -635,7 +635,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.timeout = 1
             if not self.write_queue.empty() or not self.rewrite_queue.empty() and (
                     (datetime.datetime.now() - self.last_send) >= datetime.timedelta(milliseconds=MIN_MESSAGE_INTERVAL_MILLIS)):
-                if toggle:
+                if toggle or self.rewrite_queue:
                     self.handle_write_queue()
                 else:
                     self.handle_rewrite_queue()
@@ -645,7 +645,6 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
                 last_resend_check = datetime.datetime.now()
 
     def handle_resends(self):
-        logger.debug(self.unacknowledged)
         done = set()
         t = datetime.datetime.now()
         for k in self.unacknowledged.keys():

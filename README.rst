@@ -170,6 +170,10 @@ commands instead of buying a weather station.
 
 Changelog
 =========
+**0.36**
+
+- add rudimentary tracking of successfully sent messages and resending of unacknowledged ones.
+
 **0.35.1**
 
 - fix issue with crashes when "sets" was not defined because a bogous device type was present in duofern config.
