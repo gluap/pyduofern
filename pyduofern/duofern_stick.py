@@ -176,14 +176,12 @@ class DuofernStick(object):
             json.dump(self.config, config_fh, indent=4)
 
     def process_message(self, message):
+        logger.debug(message)
         if self.recording:
             with open(self.record_filename, "a") as recorder:
                 recorder.write("received {}\n".format(message))
                 recorder.flush()
         if message[0:2] == '81':
-            #            logger.debug("got Acknowledged")
-            # return
-            # self.handle_write_queue()
             return
         if message[0:4] == '0602':
             logger.info("got pairing reply")
@@ -248,6 +246,7 @@ class DuofernStick(object):
         self.config['devices'].append({'id': id, 'name': name})
         self._dump_config()
         self._initialize()
+        self.initialized=1
 
     def handle_write_queue(self):
         if len(self.write_queue) > 0:
