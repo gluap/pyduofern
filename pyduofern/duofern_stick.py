@@ -392,7 +392,7 @@ class DuofernStickAsync(DuofernStick, asyncio.Protocol):
         while True:
             try:
                 logger.info("sending from stack")
-                await asyncio.sleep(MIN_MESSAGE_INTERVAL_MILLIS)
+                await asyncio.sleep(MIN_MESSAGE_INTERVAL_MILLIS/1000.)
                 data = await self.write_queue.get()
                 self.transport.write(data)
             except asyncio.CancelledError:
