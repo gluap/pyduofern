@@ -19,8 +19,8 @@ jobs:
         os:
           - Ubuntu
         py:
-          - "3.9"
-          - "3.8"
+          - "3.11"
+          - "3.10"
 
     steps:
       - name: Setup python for test ${{ matrix.py }}
