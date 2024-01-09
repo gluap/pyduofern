@@ -35,7 +35,7 @@ from .definitions import *
 # ^([^\n]+=) \(([^?\n]+)\?([^:\n]+):([^\)\n]+)\)?#?
 # $1 $3 if $2 else $4
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 duoStatusRequest = "0DFFnn400000000000000000000000000000yyyyyy01"
 duoCommand = "0Dkknnnnnnnnnnnnnnnnnnnn000000zzzzzzyyyyyy00"
@@ -556,7 +556,8 @@ class Duofern(object):
             id = msg[4:4 + 4]
 
             if id not in sensorMsg:
-                logger.info("unknown message {}".format(msg))
+                logger.warning("unknown message {}".format(msg))
+                return
 
             chan = msg[sensorMsg[id]['chan'] * 2 + 2:sensorMsg[id]['chan'] * 2 + 4]
             if code[0:2] in ("61", "70", "71"):

@@ -172,6 +172,10 @@ Changelog
 =========
 **0.36**
 
+- add periodic requests for status updates.
+
+**0.36**
+
 - add rudimentary tracking of successfully sent messages and resending of unacknowledged ones.
 
 **0.35.1**

@@ -48,7 +48,7 @@ def hex(stuff):
     return codecs.getencoder('hex')(stuff)[0].decode("utf-8")
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 duoInit1 = "01000000000000000000000000000000000000000000"
 duoInit2 = "0E000000000000000000000000000000000000000000"
@@ -65,7 +65,7 @@ duoStopUnpair = "08000000000000000000000000000000000000000000"
 duoRemotePair = "0D0006010000000000000000000000000000yyyyyy01"
 
 
-MIN_MESSAGE_INTERVAL_MILLIS = 25
+MIN_MESSAGE_INTERVAL_MILLIS = 50
 RESEND_SECONDS = (2,4)
 
 def refresh_serial_connection(function):
@@ -103,6 +103,8 @@ class DuofernStick(object):
         self.running = False
         self.pairing = False
         self.unpairing = False
+
+        self.updating_interval = 30
 
         self.system_code = None
         if system_code is not None:
@@ -269,6 +271,10 @@ class DuofernStick(object):
         self.send(duoStartPair)
         threading.Timer(timeout, self.stop_pair).start()
         self.pairing = True
+
+    def status_request(self):
+        self.send(duoStatusRequest.lower())
+
 
     def unpair(self, timeout=10):
         self.send(duoStartUnpair)
@@ -585,7 +591,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     def handle_write_queue(self):
         try:
             tosend = self.write_queue.get(block=False, timeout=None)
-            logger.info("sending {} from write queue, {} msgs left in queue".format(tosend, self.write_queue.qsize()))
+            logger.debug("sending {} from write queue, {} msgs left in queue".format(tosend, self.write_queue.qsize()))
             self._simple_write(tosend)
             self.unacknowledged[tosend[-14:-2]] = WaitingMessage(tosend, datetime.datetime.now()+datetime.timedelta(seconds=random.uniform(*RESEND_SECONDS)))
         except Empty:
@@ -603,6 +609,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         if self.recording:
             with open(self.record_filename, "a") as recorder:
                 recorder.write("sending_command {} {}\n".format(args,kwargs))
+
         self.duofern_parser.set(*args, **kwargs)
 
     def add_serial_and_send(self, msg):
@@ -614,6 +621,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         self.running = True
         self._initialize()
         last_resend_check = datetime.datetime.now()
+        last_periodic_update = datetime.datetime.now()
         toggle = False
         while self.running:
             toggle = not toggle
@@ -635,10 +643,14 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
             self.serial_connection.timeout = 1
             if not self.write_queue.empty() or not self.rewrite_queue.empty() and (
                     (datetime.datetime.now() - self.last_send) >= datetime.timedelta(milliseconds=MIN_MESSAGE_INTERVAL_MILLIS)):
-                if toggle or self.rewrite_queue:
-                    self.handle_write_queue()
-                else:
+                if toggle and self.rewrite_queue:
                     self.handle_rewrite_queue()
+                else:
+                    self.handle_write_queue()
+
+            if self.updating_interval and datetime.datetime.now() - last_periodic_update > datetime.timedelta(seconds=self.updating_interval):
+                last_periodic_update = datetime.datetime.now()
+                self.status_request()
 
             if datetime.datetime.now() - last_resend_check > datetime.timedelta(seconds=0.1):
                 self.handle_resends()
