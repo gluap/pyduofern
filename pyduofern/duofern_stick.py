@@ -650,6 +650,7 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
         for k in self.unacknowledged.keys():
             if self.unacknowledged[k].retries == 0:
                 done.add(k)
+                logger.info(f"{self.unacknowledged[k]} was never acknowledged, gave up after 5 retries")
             elif self.unacknowledged[k].next < t:
                 self.unacknowledged[k].next = t + datetime.timedelta(seconds=random.uniform(*RESEND_SECONDS))
                 self.unacknowledged[k].retries -= 1
