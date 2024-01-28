@@ -457,17 +457,23 @@ class DuofernStickThreaded(DuofernStick, threading.Thread):
     def __init__(self, serial_port=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if serial_port is None:
+
+        self.port = None
+        if serial_port is not None:
+            self.port = serial_port
+            if not self.ephemeral:
+                self.config['port'] = serial_port
+                self._dump_config()
+        elif 'port' in self.config and not self.ephemeral:  # pragma: no cover
+            self.port = self.config['port']
+        else:
             try:
                 self.port = serial.tools.list_ports.comports()[0].device
             except IndexError:
                 raise DuofernException(
                     "No serial port configured and unable to autodetect device. Did you plug in your stick?")
             logger.debug("no serial port set, autodetected {} for duofern".format(self.port))
-        else:
-            self.port = serial_port
-
-        # DuofernStick.__init__(self, device, system_code, config_file_json, duofern_parser)
+        #print("used port:", self.port)
         self.serial_connection = serial.Serial(self.port, baudrate=115200, timeout=1)
         self.running = False
         self.last_send = datetime.datetime.now()
