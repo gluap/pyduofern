@@ -3,6 +3,14 @@ from setuptools import setup
 
 from pyduofern import __version__ as version
 
+test_deps = [
+    'tox', 'pytest<8', 'pytest-asyncio'
+],
+
+extras = {
+    'test': test_deps,
+}
+
 setup(name='pyduofern',
       version=version,
       description='Library for controlling Rademacher DuoFern actors using python. Requires the Rademacher'
@@ -27,9 +35,8 @@ setup(name='pyduofern',
       zip_safe=False,
       include_package_data=False,
 
-      tests_require=[
-          'tox', 'pytest', 'pytest-asyncio'
-      ],
+      tests_require=test_deps,
+      extras_require=extras,
 
       scripts=["scripts/duofern_cli.py"],
 

@@ -24,15 +24,12 @@ jobs:
 
     steps:
       - name: Setup python for test ${{ matrix.py }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py }}
-      - uses: actions/checkout@v2
-      - name: Install tox-gh
-        run: python -m pip install tox-gh
-      - name: Setup test suite
-        run: tox r -vv --notest
-      - name: Run test suite
-        run: tox r --skip-pkg-install
-        env:
-          PYTEST_ADDOPTS: "-vv --durations=10"
+      - uses: actions/checkout@v4
+      - name: Install module
+        run: python -m pip install .[test]
+      - name: run pytest
+        run: pytest
+
