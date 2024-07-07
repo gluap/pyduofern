@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
 
     def logit(*args, **kwargs):
-        logging.info(args)
+        print(args)
 
 
     stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code, config_file_json=args.configfile,
