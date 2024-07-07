@@ -70,7 +70,8 @@ parser.add_argument('--set_name', help='Set name for a device.', nargs=2, defaul
 parser.add_argument('--debug', help='enable verbose logging', action='store_true', default=False)
 
 parser.add_argument('--up', help='pull up the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
-parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
+parser.add_argument('--down', help='roll down the selected rollershutter / blinds', metavar="NAME", nargs='+',
+                    default=None)
 parser.add_argument('--stop', help='stop the selected rollershutter / blinds', metavar="NAME", nargs='+', default=None)
 
 parser.add_argument('--on', help='switch on (for "Steckdosenaktor")', metavar="NAME", nargs='+', default=None)
@@ -214,12 +215,12 @@ class DuofernCLI(Cmd):
             duofern> rename 13f897 kitchen_west
         """
         id = [device['id'] for device in self.stick.config['devices'] if device['name'] == args[0]]
-        if len(id)==0:
+        if len(id) == 0:
             print("Please enter a valid device name for renaming.")
         self.stick.set_name(id[0], args[1])
         print("Set name for {} to {}".format(id[0], args[0]))
 
-    def refresh(self,args):
+    def refresh(self, args):
         """
         Usage:
           refresh
@@ -283,7 +284,14 @@ if __name__ == "__main__":
             print("System code must be a 4 digit hex code")
             exit(1)
 
-    stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code, config_file_json=args.configfile)
+
+    def logit(*args, **kwargs):
+        logging.info(args)
+
+
+    stick = DuofernStickThreaded(serial_port=args.device, system_code=args.code, config_file_json=args.configfile,
+                                 changes_callback=logit)
+    stick.duofern_parser.changes_callback("changes callback", it="works")
 
     if args.set_name is not None:
         assert len(args.set_name[0]) == 6 and re.match("^[0-9a-f]+$", args.set_name[0], re.IGNORECASE), \
@@ -355,7 +363,7 @@ if __name__ == "__main__":
             time.sleep(0.5)
             stick.command(blind_id, "down")
             time.sleep(2)
-    
+
     if args.stop:
         stick._initialize()
         stick.start()
