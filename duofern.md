@@ -1,7 +1,8 @@
 # Notes on the duofern protocol
 - The duofernstick contains an NRF905 microcontroller.
 - using rtlsdr, duofern packets can be received and decoded using the command below with rtl-433 (adapted from [here](https://github.com/merbanan/rtl_433/issues/33#issuecomment-715569878)). At first glance the beginning of the packet contains the data and in the end some changing data appears.
-- Somehow the command receives data on my desktop but not on my laptop. Possibly on the laptop there is too much interference from the USB hub etc...
+- Somehow the command receives data on my desktop but not on my laptop. Possibly on the laptop there is too much interference from the USB hub etc..
+- I used the sed command with my system code (in lower/upper case) to upper case it and more easily spot it in the logs.
 
 ```
 rtl_433 -s 2.0M -f 434.5M -g 55 -X "n=nrf905,m=FSK_MC_ZEROBIT,s=10,r=100,preamble={10}fd4,invert" -S known |sed s/code/CODE/g
